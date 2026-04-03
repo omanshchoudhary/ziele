@@ -14,7 +14,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/posts', (req, res) => {
   res.json([
-    { id: 1, title: 'Welcome to InkFlow', content: 'This is your first post!', author: 'Admin', createdAt: new Date() },
+    { id: 1, title: 'Welcome to Ziele', content: 'This is your first post!', author: 'Admin', createdAt: new Date() },
     { id: 2, title: 'Getting Started', content: 'Start writing your blogs here.', author: 'Admin', createdAt: new Date() }
   ]);
 });

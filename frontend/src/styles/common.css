@@ -1,0 +1,67 @@
+/* Generic Buttons (Obsidian Pill Style) */
+.back-btn, .nav-btn-primary, .follow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.4rem;
+  background: rgba(255, 92, 157, 0.1);
+  border: 1px solid rgba(255, 92, 157, 0.2);
+  border-radius: 99px;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.back-btn:hover, .nav-btn-primary:hover {
+  background: rgba(255, 92, 157, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Page Generic Styling */
+.page {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  padding: 3.5rem;
+  border-radius: 32px;
+}
+
+.page h1 { 
+  font-size: 3rem; 
+  font-weight: 700; 
+  margin-bottom: 1.5rem; 
+  letter-spacing: -1px; 
+}
+
+/* Forms */
+form { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1.5rem; 
+}
+
+form input, form textarea {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: #fff !important;
+  border-radius: 16px;
+  padding: 1.2rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+form input:focus {
+  border-color: rgba(255, 92, 157, 0.3) !important;
+}
+
+form button {
+  background: var(--primary-muted) !important;
+  color: var(--primary) !important;
+  border: 1px solid rgba(255, 92, 157, 0.2) !important;
+  font-weight: 600 !important;
+  padding: 1.2rem !important;
+  border-radius: 16px !important;
+}

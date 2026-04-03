@@ -1,0 +1,50 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  position: sticky;
+  top: 6rem;
+}
+
+.sidebar-section {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 1.5rem;
+}
+
+.sidebar-section h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #fff;
+}
+
+.trending-item, .suggestion-item {
+  margin-bottom: 1.5rem;
+}
+
+.trending-tag { color: var(--primary); font-size: 0.85rem; font-weight: 600; }
+.trending-topic { display: block; font-weight: 600; margin: 4px 0; font-size: 1rem; color: #eee; }
+.trending-meta { color: var(--text-muted); font-size: 0.85rem; }
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  background: rgba(255, 255, 255, 0.05);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-name { font-weight: 600; font-size: 0.95rem; color: #fff; }
+.user-handle { color: var(--text-muted); font-size: 0.9rem; }

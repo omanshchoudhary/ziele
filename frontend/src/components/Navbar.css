@@ -1,0 +1,96 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 2rem;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 99px;
+  position: sticky;
+  top: 1.5rem;
+  z-index: 1000;
+  max-width: 1240px;
+  margin: 1.5rem auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 1280px) {
+  .navbar {
+    margin: 1.5rem 5%;
+  }
+}
+
+.nav-brand {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: -1px;
+}
+
+.nav-brand:hover {
+  opacity: 0.8;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav-btn:hover {
+  color: #fff;
+}
+
+.nav-btn.active {
+  color: var(--primary);
+}
+
+.nav-search {
+  flex: 1 1 auto;
+  max-width: 400px;
+  margin: 0 1.5rem;
+  position: relative;
+}
+
+.nav-search input {
+  width: 100%;
+  padding: 0.6rem 1.2rem 0.6rem 2.5rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.03);
+  outline: none;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  color: #fff;
+}
+
+.nav-search::before {
+  content: "🔍";
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  opacity: 0.4;
+}
+
+.nav-search input:focus {
+  border-color: rgba(255, 92, 157, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}

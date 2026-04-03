@@ -1,0 +1,9 @@
+:root {
+  --primary: #ff5c9d; /* Soft Pink */
+  --primary-muted: rgba(255, 92, 157, 0.15);
+  --bg-obsidian: #0a0a0a;
+  --bg-card: #141414;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-main: #ffffff;
+  --text-muted: #888888;
+}
