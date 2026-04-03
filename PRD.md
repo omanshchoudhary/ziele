@@ -293,11 +293,11 @@ Most student-level blogging systems only support create/read posts and basic com
 ## 10. Detailed Task Checklist (Start to End)
 
 ### 10.1 Planning and Setup
-- [ ] Freeze project name, scope, and acceptance criteria.
-- [ ] Create Git repository and branch strategy (`main`, `dev`, feature branches).
-- [ ] Initialize React frontend and Express+tRPC backend structure.
+- [x] Freeze project name, scope, and acceptance criteria.
+- [x] Create Git repository and branch strategy (`main`, `dev`, feature branches).
+- [x] Initialize React frontend and Express+tRPC backend structure.
 - [ ] Configure TypeScript (if used), ESLint, Prettier.
-- [ ] Create `.env.example` with all required keys.
+- [x] Create `.env.example` with all required keys.
 - [ ] Setup Clerk project and keys.
 - [ ] Setup PostgreSQL instance and Prisma connection.
 - [ ] Setup Redis (cache + pub/sub + rate limit store).
@@ -354,7 +354,7 @@ Most student-level blogging systems only support create/read posts and basic com
 - [ ] Add graceful fallback messaging when AI service fails.
 
 ### 10.10 Notifications (Realtime)
-- [ ] Setup Socket.io server and client integration.
+- [x] Setup Socket.io server and client integration.
 - [ ] Setup Redis pub/sub channels for distributed notifications.
 - [ ] Trigger notifications on follow/comment/reaction.
 - [ ] Build notifications panel and unread badge.
