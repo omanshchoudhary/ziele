@@ -1,20 +1,28 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { getCommentsByPostId, addComment, deleteComment, formatCompactNumber } from "../data/mockData";
+import {
+  createComment,
+  deleteComment,
+  getPostComments,
+} from "../lib/api";
+import { formatCompactNumber } from "../lib/formatters";
 import "./CommentSection.css";
 
 function CommentSection({ postId }) {
   const [comments, setComments] = useState([]);
   const [newCommentText, setNewCommentText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [error, setError] = useState("");
   const inputRef = useRef(null);
 
-  const fetchComments = useCallback(() => {
-    const data = getCommentsByPostId(postId);
-    setComments([...data]);
+  const fetchComments = useCallback(async () => {
+    const data = await getPostComments(postId);
+    setComments(data);
   }, [postId]);
 
   useEffect(() => {
-    fetchComments();
+    fetchComments().catch((err) => {
+      setError(err.message || "Unable to load comments.");
+    });
   }, [fetchComments]);
 
   const handleSubmit = async (e) => {
@@ -22,25 +30,33 @@ function CommentSection({ postId }) {
     if (!newCommentText.trim() || isPosting) return;
 
     setIsPosting(true);
-    // Mocking an async post
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    setError("");
 
-    addComment(postId, {
-      authorName: "You",
-      authorHandle: "@currentuser",
-      avatar: "YU",
-      content: newCommentText.trim(),
-    });
+    try {
+      await createComment(postId, {
+        authorName: "You",
+        authorHandle: "@currentuser",
+        avatar: "YU",
+        content: newCommentText.trim(),
+      });
 
-    setNewCommentText("");
-    setIsPosting(false);
-    fetchComments();
+      setNewCommentText("");
+      await fetchComments();
+    } catch (err) {
+      setError(err.message || "Unable to post comment.");
+    } finally {
+      setIsPosting(false);
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this comment?")) {
-      deleteComment(id);
-      fetchComments();
+      try {
+        await deleteComment(id);
+        await fetchComments();
+      } catch (err) {
+        setError(err.message || "Unable to delete comment.");
+      }
     }
   };
 
@@ -77,6 +93,12 @@ function CommentSection({ postId }) {
           </div>
         </div>
       </form>
+
+      {error ? (
+        <div className="comment-empty-state">
+          <p>{error}</p>
+        </div>
+      ) : null}
 
       <div className="comment-list">
         {comments.length === 0 ? (

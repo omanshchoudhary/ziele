@@ -1,15 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./Notifications.css";
-import { mockNotifications } from "../data/mockData";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+import { getNotifications as getNotificationsApi } from "../lib/api";
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [source, setSource] = useState("api");
   const [error, setError] = useState("");
 
   const unreadCount = useMemo(
@@ -150,25 +146,15 @@ function Notifications() {
     setError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/notifications`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch notifications (${response.status})`);
-      }
-
-      const data = await response.json();
+      const data = await getNotificationsApi();
       const safeData = Array.isArray(data)
         ? data.map((notif, idx) => normalizeNotification(notif, idx))
         : [];
 
       setNotifications(safeData);
-      setSource("api");
     } catch (err) {
-      const fallbackData = mockNotifications.map((notif, idx) =>
-        normalizeNotification(notif, idx),
-      );
-      setNotifications(fallbackData);
-      setSource("fallback");
-      setError("Unable to reach live notifications. Showing demo data.");
+      setNotifications([]);
+      setError(err.message || "Unable to reach live notifications.");
     } finally {
       if (silent) setIsRefreshing(false);
       else setIsLoading(false);
@@ -239,9 +225,9 @@ function Notifications() {
           </div>
         </div>
 
-        {source === "fallback" || error ? (
+        {error ? (
           <div className="notifications-alert notifications-alert--warning">
-            {error || "Showing fallback data."}
+            {error}
           </div>
         ) : null}
 

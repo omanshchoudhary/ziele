@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { createPost } from "../lib/api";
 import "../components/PostCard.css";
 import "./CreatePost.css";
 
@@ -22,16 +25,32 @@ function parseTags(rawTags) {
 }
 
 function estimateReadTime(content) {
-  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  const words = content
+    .replace(/<[^>]*>/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
   if (!words) return "0 min read";
   const minutes = Math.max(1, Math.ceil(words / 200));
   return `${minutes} min read`;
 }
 
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["blockquote", "code-block"],
+    ["link"],
+    ["clean"],
+  ],
+};
+
 function CreatePost() {
   const [form, setForm] = useState(INITIAL_STATE);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishedPost, setPublishedPost] = useState(null);
+  const [error, setError] = useState("");
 
   const tags = useMemo(() => parseTags(form.tagsInput), [form.tagsInput]);
   const readTime = useMemo(
@@ -50,30 +69,34 @@ function CreatePost() {
   const onSubmit = async (event) => {
     event.preventDefault();
 
-    if (!form.title.trim() || !form.content.trim()) {
+    if (
+      !form.title.trim() ||
+      !form.content.replace(/<[^>]*>/g, " ").trim()
+    ) {
       window.alert("Please add both title and content before publishing.");
       return;
     }
 
     setIsPublishing(true);
+    setError("");
 
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    try {
+      const newPost = await createPost({
+        title: form.title.trim(),
+        content: form.content.trim(),
+        tags,
+        coverUrl: form.coverUrl.trim(),
+        language: form.language,
+        premium: form.publishAsPremium,
+      });
 
-    const newPost = {
-      id: Date.now(),
-      title: form.title.trim(),
-      content: form.content.trim(),
-      tags,
-      coverUrl: form.coverUrl.trim(),
-      language: form.language,
-      readTime,
-      premium: form.publishAsPremium,
-      createdAt: new Date().toISOString(),
-    };
-
-    setPublishedPost(newPost);
-    setIsPublishing(false);
-    setForm(INITIAL_STATE);
+      setPublishedPost(newPost);
+      setForm(INITIAL_STATE);
+    } catch (err) {
+      setError(err.message || "Unable to publish your post.");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -95,12 +118,12 @@ function CreatePost() {
           required
         />
 
-        <textarea
-          placeholder="Write your post..."
+        <ReactQuill
+          theme="snow"
           value={form.content}
-          onChange={onChange("content")}
-          rows={10}
-          required
+          onChange={(value) => setForm((prev) => ({ ...prev, content: value }))}
+          modules={quillModules}
+          placeholder="Write your post..."
         />
 
         <input
@@ -157,6 +180,8 @@ function CreatePost() {
           </div>
         )}
 
+        {error ? <p>{error}</p> : null}
+
         <button type="submit" disabled={isPublishing}>
           {isPublishing ? "Publishing..." : "Publish"}
         </button>
@@ -169,10 +194,14 @@ function CreatePost() {
             <h3 className="post-title">
               {form.title.trim() || "Your title will appear here"}
             </h3>
-            <p className="post-content">
-              {form.content.trim() ||
-                "Start writing your content to see a preview."}
-            </p>
+            <div
+              className="post-content"
+              dangerouslySetInnerHTML={{
+                __html:
+                  form.content.trim() ||
+                  "<p>Start writing your content to see a preview.</p>",
+              }}
+            />
             <div className="post-tags-container">
               {tags.map((tag) => (
                 <span key={tag} className="post-tag-pill">

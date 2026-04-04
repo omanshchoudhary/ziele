@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getRandomPost } from "../data/mockData";
+import { getRandomPost } from "../lib/api";
 import "./FloatingPanel.css";
 
 function FloatingPanel() {
@@ -9,13 +9,17 @@ function FloatingPanel() {
   const location = useLocation();
   const panelRef = useRef(null);
 
-  const handleMagicPost = () => {
-    const randomPost = getRandomPost();
-    if (!randomPost) {
+  const handleMagicPost = async () => {
+    try {
+      const randomPost = await getRandomPost();
+      if (!randomPost) {
+        navigate("/");
+        return;
+      }
+      navigate(`/post/${randomPost.id}`);
+    } catch {
       navigate("/");
-      return;
     }
-    navigate(`/post/${randomPost.id}`);
   };
 
   const menuItems = useMemo(

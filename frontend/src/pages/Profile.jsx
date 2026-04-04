@@ -2,32 +2,55 @@ import React, { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import "../styles/profile.css";
 import "../components/PostCard.css";
-import {
-  getProfileById,
-  mockPosts,
-  formatCompactNumber,
-} from "../data/mockData";
+import { getCurrentProfile, getProfile } from "../lib/api";
+import { formatCompactNumber } from "../lib/formatters";
 
 const tabs = ["Stories", "Drafts", "Bookmarks", "About"];
 
-function getPostsForProfile(handle) {
-  if (!handle) return [];
-  const normalized = handle.toLowerCase().replace(/^@/, "");
-  return mockPosts.filter(
-    (post) => post.authorHandle.toLowerCase().replace(/^@/, "") === normalized,
-  );
-}
-
 function Profile() {
   const { id } = useParams();
-  const profile = useMemo(() => getProfileById(id), [id]);
-  const profilePosts = useMemo(
-    () => getPostsForProfile(profile?.handle),
-    [profile?.handle],
-  );
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [activeTab, setActiveTab] = useState("Stories");
   const [followed, setFollowed] = useState(false);
+  const profilePosts = useMemo(() => profile?.posts || [], [profile]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    setIsLoading(true);
+    const request = id ? getProfile(id) : getCurrentProfile();
+
+    request
+      .then((data) => {
+        if (!cancelled) {
+          setProfile(data);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || "Unable to load profile.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="profile-container">
+        <div className="page profile-stack">
+          <h1 className="profile-page-title-inline">Loading profile...</h1>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
@@ -97,7 +120,7 @@ function Profile() {
 
               <div className="post-body-mid">
                 <h2 className="post-title">{post.title}</h2>
-                <p className="post-content">{post.content}</p>
+                <p className="post-content">{post.summary || post.contentText}</p>
                 <div className="post-tags-container">
                   {post.tags?.map((tag) => (
                     <span key={tag} className="post-tag-pill">

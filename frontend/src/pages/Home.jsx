@@ -1,30 +1,56 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { mockPosts, formatCompactNumber } from "../data/mockData";
+import { getPosts } from "../lib/api";
+import { formatCompactNumber } from "../lib/formatters";
 import "../components/PostCard.css";
 
 function Home() {
-  const [reactionState, setReactionState] = useState(() =>
-    mockPosts.reduce((acc, post) => {
-      acc[post.id] = {
-        liked: false,
-        disliked: false,
-        bookmarked: false,
-        likes: post.likes || 0,
-        dislikes: post.dislikes || 0,
-        bookmarks: post.bookmarks || 0,
-      };
-      return acc;
-    }, {}),
-  );
+  const [posts, setPosts] = useState([]);
+  const [reactionState, setReactionState] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getPosts()
+      .then((data) => {
+        if (cancelled) return;
+
+        setPosts(data);
+        setReactionState(
+          data.reduce((acc, post) => {
+            acc[post.id] = {
+              liked: false,
+              disliked: false,
+              bookmarked: false,
+              likes: post.likes || 0,
+              dislikes: post.dislikes || 0,
+              bookmarks: post.bookmarks || 0,
+            };
+            return acc;
+          }, {}),
+        );
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || "Unable to load posts.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const sortedPosts = useMemo(() => {
-    return [...mockPosts].sort((a, b) => {
+    return [...posts].sort((a, b) => {
       const aDate = new Date(a.createdAt || 0).getTime();
       const bDate = new Date(b.createdAt || 0).getTime();
       return bDate - aDate;
     });
-  }, []);
+  }, [posts]);
 
   const onLike = (postId) => {
     setReactionState((current) => {
@@ -101,7 +127,7 @@ function Home() {
         });
         return;
       } catch {
-        // user cancelled or share failed -> fallback to clipboard
+        // fallback to clipboard
       }
     }
 
@@ -112,6 +138,14 @@ function Home() {
       window.alert(`Share this link: ${shareUrl}`);
     }
   };
+
+  if (isLoading) {
+    return <div className="feed">Loading stories...</div>;
+  }
+
+  if (error) {
+    return <div className="feed">{error}</div>;
+  }
 
   return (
     <div className="feed">
@@ -138,7 +172,7 @@ function Home() {
                 <h2 className="post-title">{post.title}</h2>
               </Link>
 
-              <p className="post-content">{post.content}</p>
+              <p className="post-content">{post.summary || post.contentText}</p>
 
               <div className="post-tags-container">
                 {post.tags?.map((tag) => (
@@ -156,17 +190,7 @@ function Home() {
                 onClick={() => onLike(post.id)}
                 aria-pressed={Boolean(state?.liked)}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill={state?.liked ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={state?.liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
                 <span>{formatCompactNumber(state?.likes || 0)}</span>
@@ -178,17 +202,7 @@ function Home() {
                 onClick={() => onDislike(post.id)}
                 aria-pressed={Boolean(state?.disliked)}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill={state?.disliked ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={state?.disliked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m14 10-2 2-2-2"></path>
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="m10 14 2-2 2 2"></path>
@@ -201,17 +215,7 @@ function Home() {
                 className="action-icon-btn comment-btn"
                 title="Comment"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
                 <span>{formatCompactNumber(post.comments || 0)}</span>
@@ -222,18 +226,7 @@ function Home() {
                 title="Share"
                 onClick={() => onShare(post.id, post.title)}
               >
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="18" cy="5" r="3"></circle>
                   <circle cx="6" cy="12" r="3"></circle>
                   <circle cx="18" cy="19" r="3"></circle>
@@ -248,17 +241,7 @@ function Home() {
                 onClick={() => onBookmark(post.id)}
                 aria-pressed={Boolean(state?.bookmarked)}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill={state?.bookmarked ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={state?.bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
                 </svg>
                 <span>{formatCompactNumber(state?.bookmarks || 0)}</span>

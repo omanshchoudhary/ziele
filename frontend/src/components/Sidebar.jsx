@@ -1,13 +1,33 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {
-  mockTrendingTopics,
-  mockSuggestions,
-  formatCompactNumber,
-} from "../data/mockData";
+import { getSidebarData } from "../lib/api";
+import { formatCompactNumber } from "../lib/formatters";
 import "./Sidebar.css";
 
 function Sidebar() {
+  const [sidebarData, setSidebarData] = React.useState({
+    trendingTopics: [],
+    suggestions: [],
+  });
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    getSidebarData()
+      .then((data) => {
+        if (!cancelled) setSidebarData(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSidebarData({ trendingTopics: [], suggestions: [] });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <aside className="sidebar" aria-label="Sidebar">
       <section
@@ -21,7 +41,7 @@ function Sidebar() {
           </Link>
         </div>
 
-        {mockTrendingTopics.map((item) => (
+        {sidebarData.trendingTopics.map((item) => (
           <Link
             key={item.tag}
             to={`/discover?tag=${encodeURIComponent(item.tag.replace("#", ""))}`}
@@ -52,7 +72,7 @@ function Sidebar() {
           </Link>
         </div>
 
-        {mockSuggestions.map((user) => (
+        {sidebarData.suggestions.map((user) => (
           <div key={user.handle} className="suggestion-item">
             <div className="user-avatar" aria-hidden="true">
               {user.avatar}

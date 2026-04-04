@@ -1,0 +1,250 @@
+{
+  "posts": [
+    {
+      "id": 1,
+      "profileId": "omansh",
+      "avatar": "OC",
+      "authorName": "Omansh Choudhary",
+      "authorHandle": "@omansh",
+      "title": "The Future of Web Dev",
+      "content": "<p>As we move further into the decade, the landscape of the web continues to evolve at a breakneck pace.</p><p>This is a deep dive into what the future holds for developers building fast, collaborative, and resilient products.</p>",
+      "tags": [
+        "Technology",
+        "React",
+        "Design"
+      ],
+      "likes": 1200,
+      "dislikes": 34,
+      "bookmarks": 89,
+      "views": 8300,
+      "coverUrl": "",
+      "language": "English",
+      "premium": false,
+      "createdAt": "2026-01-14T10:30:00.000Z"
+    },
+    {
+      "id": 2,
+      "profileId": "zieleapp",
+      "avatar": "ZO",
+      "authorName": "Ziele Official",
+      "authorHandle": "@zieleapp",
+      "title": "Ziele: Next-Gen Social Blogging",
+      "content": "<p>We're excited to launch Ziele, a platform designed for writers by writers.</p><p>Our mission is to provide a clean space to share your thoughts, discover great stories, and build a thoughtful creator community.</p>",
+      "tags": [
+        "Platform",
+        "Updates",
+        "News"
+      ],
+      "likes": 4500,
+      "dislikes": 22,
+      "bookmarks": 270,
+      "views": 15200,
+      "coverUrl": "",
+      "language": "English",
+      "premium": true,
+      "createdAt": "2026-01-14T07:10:00.000Z"
+    },
+    {
+      "id": 3,
+      "profileId": "janesmith",
+      "avatar": "JS",
+      "authorName": "Jane Smith",
+      "authorHandle": "@janesmith",
+      "title": "Minimalist UI is Here to Stay",
+      "content": "<p>In an era of information overload, simplicity is the ultimate sophistication.</p><p>Designers are returning to the basics with minimalist interfaces that feel calm, purposeful, and fast.</p>",
+      "tags": [
+        "Design",
+        "UI/UX",
+        "Trends"
+      ],
+      "likes": 892,
+      "dislikes": 11,
+      "bookmarks": 74,
+      "views": 4900,
+      "coverUrl": "",
+      "language": "English",
+      "premium": false,
+      "createdAt": "2026-01-13T12:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "profileId": "arivera",
+      "avatar": "AR",
+      "authorName": "Alex Rivera",
+      "authorHandle": "@arivera",
+      "title": "Shipping Fast with Vite + React",
+      "content": "<p>A practical guide to structuring React apps with Vite for blazing-fast feedback loops.</p><p>We'll look at tooling, architecture, and a few habits that keep projects maintainable as they grow.</p>",
+      "tags": [
+        "React",
+        "Vite",
+        "Performance"
+      ],
+      "likes": 1530,
+      "dislikes": 19,
+      "bookmarks": 111,
+      "views": 7100,
+      "coverUrl": "",
+      "language": "English",
+      "premium": true,
+      "createdAt": "2026-01-12T16:45:00.000Z"
+    },
+    {
+      "id": 5,
+      "profileId": "mirachen",
+      "avatar": "MC",
+      "authorName": "Mira Chen",
+      "authorHandle": "@mirachen",
+      "title": "Writing Better Product Stories",
+      "content": "<p>Great products deserve great stories.</p><p>Learn how to translate product decisions into narratives users instantly connect with across launch pages, changelogs, and onboarding.</p>",
+      "tags": [
+        "Writing",
+        "Product",
+        "Storytelling"
+      ],
+      "likes": 980,
+      "dislikes": 8,
+      "bookmarks": 92,
+      "views": 5300,
+      "coverUrl": "",
+      "language": "English",
+      "premium": false,
+      "createdAt": "2026-01-11T09:20:00.000Z"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "omansh",
+      "name": "Omansh Choudhary",
+      "handle": "@omansh",
+      "bio": "Founding Ziele. Architecting the future of social blogging with a focus on minimalism and speed.",
+      "avatar": "OC",
+      "followers": 12400,
+      "following": 892,
+      "posts": 45,
+      "likes": 38000,
+      "streak": 12,
+      "isPremium": true,
+      "joined": "January 2024"
+    },
+    {
+      "id": "zieleapp",
+      "name": "Ziele Official",
+      "handle": "@zieleapp",
+      "bio": "Official platform account sharing product updates, launches, and creator community highlights.",
+      "avatar": "ZO",
+      "followers": 20100,
+      "following": 128,
+      "posts": 18,
+      "likes": 52200,
+      "streak": 30,
+      "isPremium": true,
+      "joined": "January 2024"
+    },
+    {
+      "id": "janesmith",
+      "name": "Jane Smith",
+      "handle": "@janesmith",
+      "bio": "Design systems, minimalist UI, and thoughtful product writing.",
+      "avatar": "JS",
+      "followers": 9800,
+      "following": 410,
+      "posts": 32,
+      "likes": 21400,
+      "streak": 6,
+      "isPremium": false,
+      "joined": "March 2024"
+    },
+    {
+      "id": "arivera",
+      "name": "Alex Rivera",
+      "handle": "@arivera",
+      "bio": "Frontend engineer sharing practical React and performance tips.",
+      "avatar": "AR",
+      "followers": 7600,
+      "following": 530,
+      "posts": 27,
+      "likes": 16300,
+      "streak": 9,
+      "isPremium": true,
+      "joined": "May 2024"
+    },
+    {
+      "id": "mirachen",
+      "name": "Mira Chen",
+      "handle": "@mirachen",
+      "bio": "Writer focused on product storytelling, publishing systems, and content strategy.",
+      "avatar": "MC",
+      "followers": 6400,
+      "following": 355,
+      "posts": 21,
+      "likes": 11800,
+      "streak": 4,
+      "isPremium": false,
+      "joined": "June 2024"
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "postId": 1,
+      "authorName": "Sarah Chen",
+      "authorHandle": "@sarahc",
+      "avatar": "SC",
+      "content": "This is exactly what the web needs. Great insights on the future of development.",
+      "createdAt": "2026-01-14T11:30:00.000Z"
+    },
+    {
+      "id": 2,
+      "postId": 1,
+      "authorName": "Alex Rivera",
+      "authorHandle": "@arivera",
+      "avatar": "AR",
+      "content": "I'm curious about how AI will play into this. Have you considered the impact of LLMs on code quality?",
+      "createdAt": "2026-01-14T11:45:00.000Z"
+    },
+    {
+      "id": 3,
+      "postId": 2,
+      "authorName": "John Doe",
+      "authorHandle": "@johndoe",
+      "avatar": "JD",
+      "content": "Ziele looks amazing. I've been waiting for a platform like this.",
+      "createdAt": "2026-01-14T10:10:00.000Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "type": "follow",
+      "user": {
+        "name": "Alex Rivera",
+        "avatar": "https://i.pravatar.cc/150?u=alex"
+      },
+      "timestamp": "2026-01-14T12:45:00.000Z",
+      "read": false
+    },
+    {
+      "id": 2,
+      "type": "comment",
+      "user": {
+        "name": "Sarah Chen",
+        "avatar": "https://i.pravatar.cc/150?u=sarah"
+      },
+      "target": "The Future of Web Dev",
+      "content": "Great insights! I really loved the part about tRPC.",
+      "timestamp": "2026-01-14T11:00:00.000Z",
+      "read": false
+    },
+    {
+      "id": 3,
+      "type": "like",
+      "user": {
+        "name": "Jordan Smith",
+        "avatar": "https://i.pravatar.cc/150?u=jordan"
+      },
+      "target": "Shipping Fast with Vite + React",
+      "timestamp": "2026-01-13T15:20:00.000Z",
+      "read": true
+    }
+  ]
+}

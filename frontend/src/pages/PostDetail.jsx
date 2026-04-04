@@ -1,10 +1,10 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import {
   getPostById,
   getRelatedPosts,
-  formatCompactNumber,
-} from "../data/mockData";
+} from "../lib/api";
+import { formatCompactNumber } from "../lib/formatters";
 import CommentSection from "../components/CommentSection";
 import "../components/PostCard.css";
 import "./PostDetail.css";
@@ -12,8 +12,10 @@ import "./PostDetail.css";
 function PostDetail() {
   const { id } = useParams();
   const location = useLocation();
-  const post = useMemo(() => getPostById(id), [id]);
-  const relatedPosts = useMemo(() => getRelatedPosts(id), [id]);
+  const [post, setPost] = useState(null);
+  const [relatedPosts, setRelatedPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (location.hash === "#comments") {
@@ -23,6 +25,30 @@ function PostDetail() {
       }
     }
   }, [location]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setIsLoading(true);
+    setError("");
+
+    Promise.all([getPostById(id), getRelatedPosts(id)])
+      .then(([postData, relatedData]) => {
+        if (cancelled) return;
+        setPost(postData);
+        setRelatedPosts(relatedData);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || "Unable to load this post.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const scrollToComments = () => {
     const element = document.getElementById("comments");
@@ -37,6 +63,15 @@ function PostDetail() {
   const [likes, setLikes] = useState(post?.likes || 0);
   const [dislikes, setDislikes] = useState(post?.dislikes || 0);
   const [bookmarks, setBookmarks] = useState(post?.bookmarks || 0);
+
+  useEffect(() => {
+    setLikes(post?.likes || 0);
+    setDislikes(post?.dislikes || 0);
+    setBookmarks(post?.bookmarks || 0);
+    setLiked(false);
+    setDisliked(false);
+    setBookmarked(false);
+  }, [post]);
 
   const onLike = () => {
     if (liked) {
@@ -99,14 +134,24 @@ function PostDetail() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="page">
+        <div className="post-detail-not-found">
+          <h1 className="post-detail-not-found-title">Loading post...</h1>
+        </div>
+      </div>
+    );
+  }
+
   if (!post) {
     return (
       <div className="page">
         <div className="post-detail-not-found">
           <h1 className="post-detail-not-found-title">Post not found</h1>
           <p className="post-detail-not-found-text">
-            The post you are looking for doesn&apos;t exist or may have been
-            removed.
+            {error ||
+              "The post you are looking for doesn't exist or may have been removed."}
           </p>
           <div>
             <Link to="/" className="back-btn">
@@ -117,14 +162,6 @@ function PostDetail() {
       </div>
     );
   }
-
-  const paragraphs = post.content
-    .split(". ")
-    .filter(Boolean)
-    .map((chunk, idx, arr) => {
-      const suffix = idx === arr.length - 1 || chunk.endsWith(".") ? "" : ".";
-      return `${chunk}${suffix}`;
-    });
 
   return (
     <div className="page post-detail-page">
@@ -161,13 +198,10 @@ function PostDetail() {
             ))}
           </div>
 
-          <div className="post-detail-paragraphs">
-            {paragraphs.map((paragraph, idx) => (
-              <p key={idx} className="post-content post-detail-paragraph">
-                {paragraph}
-              </p>
-            ))}
-          </div>
+          <div
+            className="post-detail-paragraphs"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
         </div>
 
         <div className="post-actions-bottom post-detail-actions">
@@ -319,7 +353,9 @@ function PostDetail() {
                   <h3 className="post-title post-detail-related-card-title">
                     {related.title}
                   </h3>
-                  <p className="post-content">{related.content}</p>
+                  <p className="post-content">
+                    {related.summary || related.contentText}
+                  </p>
                 </div>
               </Link>
             ))}

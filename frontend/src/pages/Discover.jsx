@@ -1,10 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import {
-  discoverCategories,
-  mockDiscoverBlogs,
-  mockDiscoverCreators,
-} from "../data/mockData";
+import { getDiscoverData } from "../lib/api";
 import "./Discover.css";
 
 function normalizeTag(value) {
@@ -14,6 +10,12 @@ function normalizeTag(value) {
 function Discover() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [discoverData, setDiscoverData] = useState({
+    blogs: [],
+    creators: [],
+    categories: ["Recommended"],
+  });
+  const [error, setError] = useState("");
 
   const searchQueryRaw = (searchParams.get("q") || "").trim();
   const searchQuery = searchQueryRaw.toLowerCase();
@@ -22,7 +24,7 @@ function Discover() {
   useEffect(() => {
     if (!tagQuery) return;
 
-    const matchedCategory = discoverCategories.find(
+    const matchedCategory = discoverData.categories.find(
       (category) =>
         category !== "Recommended" && normalizeTag(category) === tagQuery,
     );
@@ -30,30 +32,36 @@ function Discover() {
     if (matchedCategory) {
       setSelectedCategories([matchedCategory]);
     }
-  }, [tagQuery]);
+  }, [discoverData.categories, tagQuery]);
 
-  const visibleBlogs = useMemo(() => {
-    const byCategory =
-      selectedCategories.length === 0
-        ? mockDiscoverBlogs
-        : mockDiscoverBlogs.filter((blog) =>
-            selectedCategories.includes(blog.category),
-          );
+  useEffect(() => {
+    let cancelled = false;
 
-    return byCategory.filter((blog) => {
-      const matchesSearch =
-        searchQuery.length === 0 ||
-        blog.title.toLowerCase().includes(searchQuery) ||
-        blog.summary.toLowerCase().includes(searchQuery) ||
-        blog.author.toLowerCase().includes(searchQuery) ||
-        blog.category.toLowerCase().includes(searchQuery);
+    getDiscoverData({
+      q: searchQueryRaw,
+      tag:
+        selectedCategories.length === 1
+          ? normalizeTag(selectedCategories[0])
+          : tagQuery,
+    })
+      .then((data) => {
+        if (!cancelled) {
+          setDiscoverData(data);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err.message || "Unable to load discover data.");
+        }
+      });
 
-      const matchesTag =
-        tagQuery.length === 0 || normalizeTag(blog.category) === tagQuery;
+    return () => {
+      cancelled = true;
+    };
+  }, [searchQueryRaw, selectedCategories, tagQuery]);
 
-      return matchesSearch && matchesTag;
-    });
-  }, [searchQuery, selectedCategories, tagQuery]);
+  const visibleBlogs = useMemo(() => discoverData.blogs, [discoverData.blogs]);
 
   const updateParams = (updater) => {
     const next = new URLSearchParams(searchParams);
@@ -118,8 +126,10 @@ function Discover() {
         )}
       </div>
 
+      {error ? <p className="discover-results-hint">{error}</p> : null}
+
       <nav className="discover-nav" aria-label="Discover categories">
-        {discoverCategories.map((category) => {
+        {discoverData.categories.map((category) => {
           const isActive =
             category === "Recommended"
               ? selectedCategories.length === 0
@@ -207,7 +217,7 @@ function Discover() {
                   </div>
 
                   <div className="creator-grid">
-                    {mockDiscoverCreators.map((profile) => (
+                    {discoverData.creators.map((profile) => (
                       <article key={profile.id} className="creator-card">
                         <div className="creator-top-block">
                           <div className="creator-top-avatar">
