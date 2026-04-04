@@ -265,11 +265,11 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
 
         {/* CLERK: Show the native Sign In modal trigger when the user is logged out */}
         <SignedOut>
-          <div className="nav-btn nav-btn-primary" style={{ cursor: "pointer" }}>
-            <SignInButton mode="modal">
+          <SignInButton mode="modal">
+            <button className="nav-btn nav-btn-primary" style={{ cursor: "pointer" }}>
               Sign In
-            </SignInButton>
-          </div>
+            </button>
+          </SignInButton>
         </SignedOut>
       </div>
     </nav>
