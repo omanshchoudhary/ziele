@@ -19,6 +19,19 @@ import GenericPlaceholder from "./pages/GenericPlaceholder";
 import Analytics from "./pages/Analytics";
 import FloatingPanel from "./components/FloatingPanel";
 
+// IMPORT: Clerk Auth helper components to handle route protection
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+
+// HELPER: Component to protect specific private routes
+const ProtectedRoute = ({ children }) => {
+  return (
+    <>
+      <SignedIn>{children}</SignedIn>
+      <SignedOut><RedirectToSignIn /></SignedOut>
+    </>
+  );
+};
+
 const THEME_STORAGE_KEY = "ziele-theme";
 const THEMES = {
   DARK: "dark",
@@ -78,18 +91,23 @@ function App() {
       <div className={`main-layout${hideSidebar ? " discover-full" : ""}`}>
         <main className="feed-content">
           <Routes>
+            {/* PUBLIC ROUTES: Accessible to everyone */}
             <Route path="/" element={<Home />} />
             <Route path="/discover" element={<Discover />} />
             <Route path="/post/:id" element={<PostDetail />} />
-            <Route path="/create" element={<CreatePost />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:id" element={<Profile />} />
-            <Route path="/connections" element={<Connections />} />
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/communities" element={<Communities />} />
+            {/* PRIVATE ROUTES: Require user authentication via Clerk */}
+            <Route path="/create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/connections" element={<ProtectedRoute><Connections /></ProtectedRoute>} />
+
+            {/* PLACEHOLDER ROUTES */}
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/drafts" element={<GenericPlaceholder />} />
+
             <Route path="/bookmarks" element={<GenericPlaceholder />} />
             <Route path="/settings" element={<GenericPlaceholder />} />
             <Route path="/more" element={<GenericPlaceholder />} />
