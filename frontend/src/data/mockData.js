@@ -342,3 +342,63 @@ export function getRelatedPosts(postId) {
     .map(({ _score, ...post }) => post)
     .slice(0, 3);
 }
+export const mockComments = [
+  {
+    id: 1,
+    postId: 1,
+    authorName: "Sarah Chen",
+    authorHandle: "@sarahc",
+    avatar: "SC",
+    content: "This is exactly what the web needs! Great insights on the future of development.",
+    time: "1h ago",
+    createdAt: "2026-01-14T11:30:00.000Z",
+  },
+  {
+    id: 2,
+    postId: 1,
+    authorName: "Alex Rivera",
+    authorHandle: "@arivera",
+    avatar: "AR",
+    content: "I'm curious about how AI will play into this. Have you considered the impact of LLMs on code quality?",
+    time: "45m ago",
+    createdAt: "2026-01-14T11:45:00.000Z",
+  },
+  {
+    id: 3,
+    postId: 2,
+    authorName: "John Doe",
+    authorHandle: "@johndoe",
+    avatar: "JD",
+    content: "Ziele looks amazing! I've been waiting for a platform like this.",
+    time: "2h ago",
+    createdAt: "2026-01-14T10:10:00.000Z",
+  },
+];
+
+export function getCommentsByPostId(postId) {
+  const id = Number(postId);
+  return mockComments
+    .filter((comment) => comment.postId === id)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function addComment(postId, commentData) {
+  const newComment = {
+    id: Date.now(),
+    postId: Number(postId),
+    ...commentData,
+    createdAt: new Date().toISOString(),
+    time: "Just now",
+  };
+  mockComments.unshift(newComment);
+  return newComment;
+}
+
+export function deleteComment(commentId) {
+  const index = mockComments.findIndex((c) => c.id === commentId);
+  if (index !== -1) {
+    mockComments.splice(index, 1);
+    return true;
+  }
+  return false;
+}
