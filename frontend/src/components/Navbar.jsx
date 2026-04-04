@@ -1,57 +1,257 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import './Navbar.css';
+import React from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import "./Navbar.css";
 
-function Navbar() {
-  const [searchQuery, setSearchQuery] = React.useState('');
+function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const queryFromUrl = params.get("q") || "";
+
+    if (location.pathname === "/discover") {
+      setSearchQuery(queryFromUrl);
+    } else if (queryFromUrl && searchQuery !== queryFromUrl) {
+      setSearchQuery(queryFromUrl);
+    }
+  }, [location.pathname, location.search]);
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+
+    const trimmed = searchQuery.trim();
+    const params = new URLSearchParams(location.search);
+
+    if (!trimmed) {
+      params.delete("q");
+    } else {
+      params.set("q", trimmed);
+    }
+
+    const nextQuery = params.toString();
+    navigate(`/discover${nextQuery ? `?${nextQuery}` : ""}`);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    const params = new URLSearchParams(location.search);
+    params.delete("q");
+    const nextQuery = params.toString();
+    navigate(`/discover${nextQuery ? `?${nextQuery}` : ""}`);
+  };
+
+  const getNavLinkClass = ({ isActive }) =>
+    `nav-btn${isActive ? " active" : ""}`;
 
   return (
-    <nav className="navbar">
-      <Link to="/" className="nav-brand">Ziele</Link>
-      <div className="nav-search">
-        <input 
-          type="text" 
-          placeholder="Search stories, topics, or authors..." 
+    <nav className="navbar" role="navigation" aria-label="Primary">
+      <Link to="/" className="nav-brand" aria-label="Ziele home">
+        Ziele
+      </Link>
+
+      <form className="nav-search" role="search" onSubmit={handleSearchSubmit}>
+        <label htmlFor="navbar-search" className="sr-only">
+          Search stories, topics, or authors
+        </label>
+        <input
+          id="navbar-search"
+          type="search"
+          placeholder="Search stories, topics, or authors..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search stories, topics, or authors"
+          autoComplete="off"
         />
-      </div>
-      <div className="nav-links">
-        <Link to="/" className="nav-btn" title="Home">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+
+        {searchQuery ? (
+          <button
+            type="button"
+            className="nav-search-clear"
+            onClick={clearSearch}
+            aria-label="Clear search"
+            title="Clear search"
+          >
+            ×
+          </button>
+        ) : null}
+      </form>
+
+      <div className="nav-links" aria-label="Main links">
+        <button
+          type="button"
+          className="nav-btn nav-theme-toggle"
+          onClick={onToggleTheme}
+          title={isDarkTheme ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={
+            isDarkTheme ? "Switch to light mode" : "Switch to dark mode"
+          }
+        >
+          {isDarkTheme ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+            </svg>
+          )}
+          <span>{isDarkTheme ? "Light" : "Dark"}</span>
+        </button>
+
+        <NavLink
+          to="/"
+          end
+          className={getNavLinkClass}
+          title="Home"
+          aria-label="Home"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
           </svg>
           <span>Home</span>
-        </Link>
-        <Link to="/discover" className="nav-btn" title="Discover">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        </NavLink>
+
+        <NavLink
+          to="/discover"
+          className={getNavLinkClass}
+          title="Discover"
+          aria-label="Discover"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
           </svg>
           <span>Discover</span>
-        </Link>
-        <Link to="/create" className="nav-btn nav-btn-primary" title="Write a post">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        </NavLink>
+
+        <NavLink
+          to="/create"
+          className={({ isActive }) =>
+            `nav-btn nav-btn-primary${isActive ? " active" : ""}`
+          }
+          title="Write a post"
+          aria-label="Create post"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M12 20h9"></path>
             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
           </svg>
           <span>Post</span>
-        </Link>
-        <Link to="/notifications" className="nav-btn" title="Notifications">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        </NavLink>
+
+        <NavLink
+          to="/notifications"
+          className={getNavLinkClass}
+          title="Notifications"
+          aria-label="Notifications"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
           </svg>
           <span>Notifications</span>
-        </Link>
-        <Link to="/profile" className="nav-btn" title="Your profile">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        </NavLink>
+
+        <NavLink
+          to="/profile"
+          className={getNavLinkClass}
+          title="Your profile"
+          aria-label="Profile"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
           <span>Profile</span>
-        </Link>
+        </NavLink>
       </div>
     </nav>
   );

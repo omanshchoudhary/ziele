@@ -1,9 +1,109 @@
 :root {
-  --primary: #ff5c9d; /* Soft Pink */
-  --primary-muted: rgba(255, 92, 157, 0.15);
-  --bg-obsidian: #0a0a0a;
-  --bg-card: #141414;
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --text-main: #ffffff;
-  --text-muted: #888888;
+    /* Brand */
+    --primary: #ff5c9d;
+    --primary-strong: #ff2e8c;
+    --primary-muted: rgba(255, 92, 157, 0.15);
+    --primary-soft: rgba(255, 92, 157, 0.08);
+
+    /* Surface / Text (default to dark) */
+    --bg-obsidian: #0a0a0a;
+    --bg-page: #0f0f10;
+    --bg-card: #141414;
+    --bg-card-2: #1b1b1c;
+    --bg-elevated: rgba(255, 255, 255, 0.04);
+
+    --glass-bg: rgba(20, 20, 20, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-strong: rgba(255, 255, 255, 0.16);
+
+    --text-main: #ffffff;
+    --text-muted: #888888;
+    --text-soft: #b3b3b3;
+    --text-inverse: #101114;
+
+    --success: #34d399;
+    --warning: #facc15;
+    --danger: #f87171;
+    --info: #60a5fa;
+
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.22);
+    --shadow-strong: 0 20px 48px rgba(0, 0, 0, 0.35);
+}
+
+/* Explicit dark mode hook (same tokens, clearer intent) */
+:root[data-theme="dark"] {
+    --bg-obsidian: #0a0a0a;
+    --bg-page: #0f0f10;
+    --bg-card: #141414;
+    --bg-card-2: #1b1b1c;
+    --bg-elevated: rgba(255, 255, 255, 0.04);
+
+    --glass-bg: rgba(20, 20, 20, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-strong: rgba(255, 255, 255, 0.16);
+
+    --text-main: #ffffff;
+    --text-muted: #888888;
+    --text-soft: #b3b3b3;
+    --text-inverse: #101114;
+
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.22);
+    --shadow-strong: 0 20px 48px rgba(0, 0, 0, 0.35);
+}
+
+/* Light mode tokens */
+:root[data-theme="light"] {
+    --bg-obsidian: #f5f7fb;
+    --bg-page: #f7f9fc;
+    --bg-card: #ffffff;
+    --bg-card-2: #f3f5f9;
+    --bg-elevated: rgba(17, 24, 39, 0.04);
+
+    --glass-bg: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(17, 24, 39, 0.14);
+    --glass-border-strong: rgba(17, 24, 39, 0.24);
+
+    --text-main: #0f172a;
+    --text-muted: #4b5563;
+    --text-soft: #334155;
+    --text-inverse: #ffffff;
+
+    --primary-muted: rgba(255, 92, 157, 0.16);
+    --primary-soft: rgba(255, 92, 157, 0.12);
+
+    --success: #059669;
+    --warning: #b45309;
+    --danger: #dc2626;
+    --info: #2563eb;
+
+    --shadow-soft: 0 8px 20px rgba(15, 23, 42, 0.1);
+    --shadow-strong: 0 16px 40px rgba(15, 23, 42, 0.14);
+}
+
+/* Respect OS preference when no explicit data-theme is set */
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme]) {
+        --bg-obsidian: #f5f7fb;
+        --bg-page: #f7f9fc;
+        --bg-card: #ffffff;
+        --bg-card-2: #f3f5f9;
+        --bg-elevated: rgba(17, 24, 39, 0.04);
+
+        --glass-bg: rgba(255, 255, 255, 0.78);
+        --glass-border: rgba(17, 24, 39, 0.14);
+        --glass-border-strong: rgba(17, 24, 39, 0.24);
+
+        --text-main: #0f172a;
+        --text-muted: #4b5563;
+        --text-soft: #334155;
+        --text-inverse: #ffffff;
+
+        --primary-muted: rgba(255, 92, 157, 0.16);
+        --primary-soft: rgba(255, 92, 157, 0.12);
+
+        --success: #059669;
+        --warning: #b45309;
+        --danger: #dc2626;
+        --info: #2563eb;
+    }
 }

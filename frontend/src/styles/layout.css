@@ -1,25 +1,84 @@
 .app {
-  min-height: 100vh;
+    min-height: 100vh;
+    width: 100%;
 }
 
+/* Shared shell spacing */
 .main-layout {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 2.5rem;
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 2.5rem 5%;
+    --layout-max-width: 1240px;
+    --layout-gutter: clamp(16px, 4vw, 56px);
+    --layout-gap: clamp(1rem, 2vw, 2.5rem);
+    --content-min: 0;
+
+    display: grid;
+    grid-template-columns: minmax(var(--content-min), 1fr) minmax(260px, 320px);
+    gap: var(--layout-gap);
+    max-width: var(--layout-max-width);
+    margin: 0 auto;
+    padding: clamp(1.25rem, 2vw, 2.25rem) var(--layout-gutter)
+        clamp(2rem, 4vw, 3rem);
+    align-items: start;
 }
 
+/* Feed column should shrink safely with long content */
+.feed-content {
+    min-width: 0;
+}
+
+/* Discover gets full-width canvas feel while reusing shell rhythm */
 .main-layout.discover-full {
-  grid-template-columns: 1fr;
-  max-width: none;
-  padding: 2.5rem 3%;
-  width: 100%;
+    --layout-max-width: 1440px;
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: clamp(14px, 2.5vw, 40px);
+    padding-right: clamp(14px, 2.5vw, 40px);
 }
 
-@media (max-width: 1000px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-  }
+/* Large desktop tuning */
+@media (min-width: 1440px) {
+    .main-layout {
+        --layout-max-width: 1320px;
+        --layout-gap: 2.75rem;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    }
+
+    .main-layout.discover-full {
+        --layout-max-width: 1540px;
+    }
+}
+
+/* Tablet and small desktop */
+@media (max-width: 1100px) {
+    .main-layout {
+        --layout-gutter: clamp(14px, 3.2vw, 28px);
+        --layout-gap: 1.2rem;
+        grid-template-columns: minmax(0, 1fr);
+        padding-top: 1.15rem;
+    }
+
+    .main-layout.discover-full {
+        --layout-gutter: clamp(12px, 3vw, 24px);
+    }
+}
+
+/* Mobile shell */
+@media (max-width: 760px) {
+    .main-layout {
+        --layout-gutter: clamp(10px, 4vw, 16px);
+        --layout-gap: 0.9rem;
+        padding-top: 0.85rem;
+        padding-bottom: 1.1rem;
+    }
+
+    .main-layout.discover-full {
+        padding-top: 0.65rem;
+        padding-bottom: 1rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 420px) {
+    .main-layout {
+        --layout-gutter: 10px;
+        --layout-gap: 0.75rem;
+    }
 }

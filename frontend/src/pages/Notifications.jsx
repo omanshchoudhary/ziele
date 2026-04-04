@@ -1,43 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import './Notifications.css';
+import React, { useEffect, useMemo, useState } from "react";
+import "./Notifications.css";
+import { mockNotifications } from "../data/mockData";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [source, setSource] = useState("api");
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/notifications');
-        const data = await response.json();
-        setNotifications(data);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotifications();
-  }, []);
+  const unreadCount = useMemo(
+    () => notifications.filter((notif) => !notif.read).length,
+    [notifications],
+  );
 
   const formatDate = (dateString) => {
+    if (!dateString) return "Just now";
     const date = new Date(dateString);
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000); // seconds
+    if (Number.isNaN(date.getTime())) return "Just now";
 
-    if (diff < 60) return 'Just now';
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 60) return "Just now";
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (diff < 7 * 86400) return `${Math.floor(diff / 86400)}d ago`;
+
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   const getIcon = (type) => {
     switch (type) {
-      case 'follow':
+      case "follow":
         return (
           <div className="icon-follow">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
               <line x1="19" y1="8" x2="19" y2="14"></line>
@@ -45,18 +56,35 @@ function Notifications() {
             </svg>
           </div>
         );
-      case 'like':
+      case "like":
         return (
           <div className="icon-like">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+            >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
           </div>
         );
-      case 'comment':
+      case "comment":
         return (
           <div className="icon-comment">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
           </div>
@@ -68,25 +96,108 @@ function Notifications() {
 
   const getMessage = (notif) => {
     switch (notif.type) {
-      case 'follow':
-        return <span><strong>{notif.user.name}</strong> started following you</span>;
-      case 'like':
-        return <span><strong>{notif.user.name}</strong> liked your story <span className="notification-target">{notif.target}</span></span>;
-      case 'comment':
-        return <span><strong>{notif.user.name}</strong> commented on <span className="notification-target">{notif.target}</span></span>;
+      case "follow":
+        return (
+          <span>
+            <strong>{notif.user?.name || "Someone"}</strong> started following
+            you
+          </span>
+        );
+      case "like":
+        return (
+          <span>
+            <strong>{notif.user?.name || "Someone"}</strong> liked your story{" "}
+            {notif.target ? (
+              <span className="notification-target">{notif.target}</span>
+            ) : null}
+          </span>
+        );
+      case "comment":
+        return (
+          <span>
+            <strong>{notif.user?.name || "Someone"}</strong> commented on{" "}
+            {notif.target ? (
+              <span className="notification-target">{notif.target}</span>
+            ) : (
+              "your post"
+            )}
+          </span>
+        );
       default:
-        return '';
+        return <span>You have a new notification</span>;
     }
   };
 
-  if (loading) {
+  const normalizeNotification = (notif, index) => ({
+    id: notif?.id ?? `fallback-${index}`,
+    type: notif?.type || "follow",
+    user: {
+      name: notif?.user?.name || "Ziele User",
+      avatar:
+        notif?.user?.avatar ||
+        `https://i.pravatar.cc/150?u=placeholder-${index}`,
+    },
+    target: notif?.target || "",
+    content: notif?.content || "",
+    timestamp: notif?.timestamp || new Date().toISOString(),
+    read: Boolean(notif?.read),
+  });
+
+  const loadNotifications = async ({ silent = false } = {}) => {
+    if (silent) setIsRefreshing(true);
+    else setIsLoading(true);
+
+    setError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch notifications (${response.status})`);
+      }
+
+      const data = await response.json();
+      const safeData = Array.isArray(data)
+        ? data.map((notif, idx) => normalizeNotification(notif, idx))
+        : [];
+
+      setNotifications(safeData);
+      setSource("api");
+    } catch (err) {
+      const fallbackData = mockNotifications.map((notif, idx) =>
+        normalizeNotification(notif, idx),
+      );
+      setNotifications(fallbackData);
+      setSource("fallback");
+      setError("Unable to reach live notifications. Showing demo data.");
+    } finally {
+      if (silent) setIsRefreshing(false);
+      else setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+  };
+
+  const markOneAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif)),
+    );
+  };
+
+  if (isLoading) {
     return (
       <div className="page">
         <div className="notifications-container">
           <div className="notifications-header">
             <h1>Notifications</h1>
           </div>
-          <div className="loading-state">
+
+          <div className="loading-state" aria-busy="true" aria-live="polite">
             <p>Loading your updates...</p>
           </div>
         </div>
@@ -99,10 +210,40 @@ function Notifications() {
       <div className="notifications-container">
         <div className="notifications-header">
           <h1>Notifications</h1>
-          {notifications.length > 0 && (
-            <button className="mark-read-btn">Mark all as read</button>
-          )}
+
+          <div className="notifications-actions">
+            {unreadCount > 0 ? (
+              <span className="status-chip status-chip--unread">
+                {unreadCount} unread
+              </span>
+            ) : null}
+
+            <button
+              className="mark-read-btn notifications-refresh-btn"
+              onClick={() => loadNotifications({ silent: true })}
+              disabled={isRefreshing}
+              type="button"
+            >
+              {isRefreshing ? "Refreshing..." : "Refresh"}
+            </button>
+
+            {notifications.length > 0 && unreadCount > 0 ? (
+              <button
+                className="mark-read-btn notifications-mark-all-btn"
+                onClick={markAllAsRead}
+                type="button"
+              >
+                Mark all as read
+              </button>
+            ) : null}
+          </div>
         </div>
+
+        {source === "fallback" || error ? (
+          <div className="notifications-alert notifications-alert--warning">
+            {error || "Showing fallback data."}
+          </div>
+        ) : null}
 
         {notifications.length === 0 ? (
           <div className="empty-notifications">
@@ -113,16 +254,26 @@ function Notifications() {
         ) : (
           <div className="notification-list">
             {notifications.map((notif, index) => (
-              <div 
-                key={notif.id} 
-                className={`notification-item ${notif.read ? '' : 'unread'}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
+              <div
+                key={notif.id}
+                className={`notification-item ${notif.read ? "" : "unread"}`}
+                style={{ animationDelay: `${index * 0.08}s` }}
+                onClick={() => markOneAsRead(notif.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    markOneAsRead(notif.id);
+                  }
+                }}
               >
-                <img 
-                  src={notif.user.avatar} 
-                  alt={notif.user.name} 
-                  className="notification-avatar" 
+                <img
+                  src={notif.user.avatar}
+                  alt={notif.user.name}
+                  className="notification-avatar"
                 />
+
                 <div className="notification-content">
                   <div className="notification-message">
                     {getMessage(notif)}
@@ -130,15 +281,15 @@ function Notifications() {
                   <div className="notification-time">
                     {formatDate(notif.timestamp)}
                   </div>
-                  {notif.type === 'comment' && notif.content && (
+
+                  {notif.type === "comment" && notif.content ? (
                     <div className="notification-comment-preview">
                       "{notif.content}"
                     </div>
-                  )}
+                  ) : null}
                 </div>
-                <div className="notification-icon">
-                  {getIcon(notif.type)}
-                </div>
+
+                <div className="notification-icon">{getIcon(notif.type)}</div>
               </div>
             ))}
           </div>

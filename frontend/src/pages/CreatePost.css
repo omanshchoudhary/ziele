@@ -1,0 +1,122 @@
+.create-post-page {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.create-post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.create-post-title {
+    margin-bottom: 0 !important;
+    color: var(--text-main);
+}
+
+.create-post-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.create-post-options-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: end;
+}
+
+.create-post-select-label {
+    color: var(--text-main);
+    display: grid;
+    gap: 0.4rem;
+    min-width: 180px;
+}
+
+.create-post-label-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.create-post-select {
+    background: var(--bg-elevated);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    border-radius: 12px;
+    padding: 0.72rem 0.85rem;
+    font-size: 0.95rem;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.create-post-select:focus {
+    border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.create-post-checkbox-label {
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-elevated);
+    min-height: 42px;
+}
+
+.create-post-checkbox-label input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+}
+
+.create-post-meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.create-post-preview-section {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.create-post-preview-title {
+    color: var(--text-main);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.create-post-success {
+    border: 1px solid color-mix(in srgb, var(--success) 38%, transparent);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+    color: var(--success);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 760px) {
+    .create-post-header {
+        align-items: flex-start;
+    }
+
+    .create-post-meta-row {
+        font-size: 0.84rem;
+    }
+
+    .create-post-checkbox-label {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

@@ -1,196 +1,127 @@
-import React, { useState } from 'react';
-import './Discover.css';
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  discoverCategories,
+  mockDiscoverBlogs,
+  mockDiscoverCreators,
+} from "../data/mockData";
+import "./Discover.css";
+
+function normalizeTag(value) {
+  return (value || "").trim().toLowerCase().replace(/^#/, "");
+}
 
 function Discover() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategories, setSelectedCategories] = useState([]);
 
-  const categories = [
-    'Recommended',
-    'Writing',
-    'UX',
-    'Community',
-    'Copywriting',
-    'Productivity',
-    'Strategy',
-  ];
+  const searchQueryRaw = (searchParams.get("q") || "").trim();
+  const searchQuery = searchQueryRaw.toLowerCase();
+  const tagQuery = normalizeTag(searchParams.get("tag"));
 
-  const blogs = [
-    {
-      id: 1,
-      title: 'Writing for a Modern Audience',
-      summary: 'Build content that connects, converts, and keeps readers coming back with a clean writer-first experience.',
-      author: 'Aurora Lane',
-      category: 'Writing',
-      views: '8.3k',
-      readTime: '6 min read',
-    },
-    {
-      id: 2,
-      title: 'Designing Dark Mode Experiences',
-      summary: 'Learn how subtle contrast, soft glow, and refined spacing create a premium dark interface.',
-      author: 'Riley Frost',
-      category: 'UX',
-      views: '5.4k',
-      readTime: '5 min read',
-    },
-    {
-      id: 3,
-      title: 'How to Launch a Community Blog',
-      summary: 'A practical guide to turning your platform into an engaging place for creators, readers, and conversations.',
-      author: 'Mira Patel',
-      category: 'Community',
-      views: '6.1k',
-      readTime: '7 min read',
-    },
-    {
-      id: 4,
-      title: 'Microcopy That Feels Human',
-      summary: 'Tiny words can have a big impact. Write interface text that feels warm, clear, and unmistakably yours.',
-      author: 'Noah Kim',
-      category: 'Copywriting',
-      views: '3.9k',
-      readTime: '4 min read',
-    },
-    {
-      id: 5,
-      title: 'Turning Notes into Stories',
-      summary: 'Transform scattered ideas into polished narratives with a workflow that keeps momentum and clarity.',
-      author: 'Sofia Reed',
-      category: 'Productivity',
-      views: '4.8k',
-      readTime: '5 min read',
-    },
-    {
-      id: 6,
-      title: 'Publishing with Purpose',
-      summary: 'Create content that amplifies your voice while staying aligned with your values and long-term goals.',
-      author: 'Elijah Stone',
-      category: 'Strategy',
-      views: '7.2k',
-      readTime: '8 min read',
-    },
-  ];
+  useEffect(() => {
+    if (!tagQuery) return;
 
-  const suggestedProfiles = [
-    {
-      id: 1,
-      initials: 'AC',
-      name: 'Ava Chen',
-      handle: '@avachen',
-      note: 'Creative director sharing design systems and writing tips.',
-      followers: '14.2k',
-      posts: '128',
-    },
-    {
-      id: 2,
-      initials: 'LK',
-      name: 'Luca King',
-      handle: '@lucaking',
-      note: 'Storytelling strategist with daily content prompts.',
-      followers: '9.8k',
-      posts: '94',
-    },
-    {
-      id: 3,
-      initials: 'JM',
-      name: 'Jade Morgan',
-      handle: '@jadem',
-      note: 'Author focused on minimal UX and creator growth.',
-      followers: '12.3k',
-      posts: '112',
-    },
-    {
-      id: 4,
-      initials: 'TN',
-      name: 'Toni Nguyen',
-      handle: '@toniny',
-      note: 'Growth writer sharing creator playbooks and daily habits.',
-      followers: '11.6k',
-      posts: '104',
-    },
-  ];
-
-  const visibleBlogs =
-    selectedCategories.length === 0
-      ? blogs
-      : blogs.filter((blog) => selectedCategories.includes(blog.category));
-
-  const feedElements = [];
-
-  visibleBlogs.forEach((blog, index) => {
-    feedElements.push(
-      <article key={blog.id} className="discover-card">
-        <div className="discover-card-meta">
-          <span>{blog.category}</span>
-          <span>{blog.views} views</span>
-        </div>
-        <h2 className="discover-card-title">{blog.title}</h2>
-        <p className="discover-card-summary">{blog.summary}</p>
-        <div className="discover-card-meta discover-card-footer">
-          <span>{blog.author} · {blog.readTime}</span>
-          <button className="read-now-btn" type="button">Read now →</button>
-        </div>
-        <div className="card-tags">
-          <span className="card-tag">#Discover</span>
-          <span className="card-tag">#{blog.category.toLowerCase()}</span>
-        </div>
-      </article>
+    const matchedCategory = discoverCategories.find(
+      (category) =>
+        category !== "Recommended" && normalizeTag(category) === tagQuery,
     );
 
-    if (index === 3) {
-      feedElements.push(
-        <section key="follow-suggestion" className="suggestion-panel">
-          <div className="suggestions-header">
-            <div>
-              <h2>Keep up with creators</h2>
-              <p className="suggestion-subtitle">Explore creator cards designed for inspiration and discovery.</p>
-            </div>
-            <span>View all</span>
-          </div>
-
-          <div className="creator-grid">
-            {suggestedProfiles.map((profile) => (
-              <article key={profile.id} className="creator-card">
-                <div className="creator-top-block">
-                  <div className="creator-top-avatar">{profile.initials}</div>
-                </div>
-                <div className="creator-card-body">
-                  <div className="creator-name-row">
-                    <p className="creator-name">{profile.name}</p>
-                    <p className="creator-username">{profile.handle}</p>
-                  </div>
-                  <p className="creator-bio">{profile.note}</p>
-                </div>
-                <div className="creator-card-footer">
-                  <div className="creator-card-stats">
-                    <span className="creator-stat">
-                      <span className="creator-stat-icon followers" />{profile.followers || '9.8k'}
-                    </span>
-                    <span className="creator-stat">
-                      <span className="creator-stat-icon posts" />{profile.posts || '98'}
-                    </span>
-                  </div>
-                  <button className="creator-follow-btn" type="button">Follow</button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      );
+    if (matchedCategory) {
+      setSelectedCategories([matchedCategory]);
     }
-  });
+  }, [tagQuery]);
+
+  const visibleBlogs = useMemo(() => {
+    const byCategory =
+      selectedCategories.length === 0
+        ? mockDiscoverBlogs
+        : mockDiscoverBlogs.filter((blog) =>
+            selectedCategories.includes(blog.category),
+          );
+
+    return byCategory.filter((blog) => {
+      const matchesSearch =
+        searchQuery.length === 0 ||
+        blog.title.toLowerCase().includes(searchQuery) ||
+        blog.summary.toLowerCase().includes(searchQuery) ||
+        blog.author.toLowerCase().includes(searchQuery) ||
+        blog.category.toLowerCase().includes(searchQuery);
+
+      const matchesTag =
+        tagQuery.length === 0 || normalizeTag(blog.category) === tagQuery;
+
+      return matchesSearch && matchesTag;
+    });
+  }, [searchQuery, selectedCategories, tagQuery]);
+
+  const updateParams = (updater) => {
+    const next = new URLSearchParams(searchParams);
+    updater(next);
+    setSearchParams(next);
+  };
+
+  const resetFilters = () => {
+    setSelectedCategories([]);
+    updateParams((params) => {
+      params.delete("tag");
+    });
+  };
+
+  const toggleCategory = (category) => {
+    if (category === "Recommended") {
+      resetFilters();
+      return;
+    }
+
+    setSelectedCategories((current) => {
+      if (current.includes(category)) {
+        const next = current.filter((item) => item !== category);
+        updateParams((params) => {
+          if (next.length === 0) params.delete("tag");
+          else params.set("tag", normalizeTag(next[0]));
+        });
+        return next;
+      }
+
+      const next = [...current, category];
+      if (next.length === 1) {
+        updateParams((params) => {
+          params.set("tag", normalizeTag(category));
+        });
+      }
+      return next;
+    });
+  };
+
+  const showCreatorPanel = visibleBlogs.length >= 4;
+  const leadingBlogs = showCreatorPanel
+    ? visibleBlogs.slice(0, 4)
+    : visibleBlogs;
+  const trailingBlogs = showCreatorPanel ? visibleBlogs.slice(4) : [];
 
   return (
     <div className="page discover-page">
       <div className="discover-intro">
         <h1>Discover</h1>
-        <p>Browse trending stories, learn from top creators, and see suggested profiles as you explore new content.</p>
+        <p>
+          Browse trending stories, learn from top creators, and discover content
+          tailored to your interests.
+        </p>
+
+        {(searchQuery || tagQuery) && (
+          <p className="discover-results-hint">
+            Showing results
+            {searchQuery ? ` for “${searchQueryRaw}”` : ""}
+            {tagQuery ? `${searchQuery ? " and " : " for "}#${tagQuery}` : ""}.
+          </p>
+        )}
       </div>
 
-      <nav className="discover-nav">
-        {categories.map((category) => {
+      <nav className="discover-nav" aria-label="Discover categories">
+        {discoverCategories.map((category) => {
           const isActive =
-            category === 'Recommended'
+            category === "Recommended"
               ? selectedCategories.length === 0
               : selectedCategories.includes(category);
 
@@ -198,21 +129,9 @@ function Discover() {
             <button
               key={category}
               type="button"
-              className={`discover-nav-item ${isActive ? 'active' : ''}`}
-              onClick={() => {
-                if (category === 'Recommended') {
-                  setSelectedCategories([]);
-                  return;
-                }
-
-                setSelectedCategories((current) => {
-                  if (current.includes(category)) {
-                    const next = current.filter((item) => item !== category);
-                    return next;
-                  }
-                  return [...current, category];
-                });
-              }}
+              className={`discover-nav-item ${isActive ? "active" : ""}`}
+              onClick={() => toggleCategory(category)}
+              aria-pressed={isActive}
             >
               {category}
             </button>
@@ -221,7 +140,139 @@ function Discover() {
       </nav>
 
       <div className="discover-layout">
-        <section className="discover-list">{feedElements}</section>
+        <section className="discover-list">
+          {visibleBlogs.length === 0 ? (
+            <article className="discover-card discover-empty-state">
+              <div className="discover-card-meta">
+                <span>No matches</span>
+                <button
+                  type="button"
+                  className="read-now-btn"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </button>
+              </div>
+              <h2 className="discover-card-title">No posts found</h2>
+              <p className="discover-card-summary">
+                We couldn’t find content matching your current filters. Try a
+                different search term or switch back to Recommended.
+              </p>
+            </article>
+          ) : (
+            <>
+              {leadingBlogs.map((blog) => (
+                <article key={blog.id} className="discover-card">
+                  <div className="discover-card-meta">
+                    <span>{blog.category}</span>
+                    <span>{blog.views} views</span>
+                  </div>
+                  <h2 className="discover-card-title">{blog.title}</h2>
+                  <p className="discover-card-summary">{blog.summary}</p>
+                  <div className="discover-card-meta discover-card-footer">
+                    <span>
+                      {blog.author} · {blog.readTime}
+                    </span>
+                    <Link
+                      to={`/post/${blog.id}`}
+                      className="read-now-btn"
+                      aria-label={`Read ${blog.title}`}
+                    >
+                      Read now →
+                    </Link>
+                  </div>
+                  <div className="card-tags">
+                    <span className="card-tag">#discover</span>
+                    <span className="card-tag">
+                      #{blog.category.toLowerCase()}
+                    </span>
+                  </div>
+                </article>
+              ))}
+
+              {showCreatorPanel && (
+                <section
+                  className="suggestion-panel"
+                  aria-label="Suggested creators"
+                >
+                  <div className="suggestions-header">
+                    <div>
+                      <h2>Keep up with creators</h2>
+                      <p className="suggestion-subtitle">
+                        Explore creator profiles designed for inspiration and
+                        discovery.
+                      </p>
+                    </div>
+                    <Link to="/connections">View all</Link>
+                  </div>
+
+                  <div className="creator-grid">
+                    {mockDiscoverCreators.map((profile) => (
+                      <article key={profile.id} className="creator-card">
+                        <div className="creator-top-block">
+                          <div className="creator-top-avatar">
+                            {profile.initials}
+                          </div>
+                        </div>
+                        <div className="creator-card-body">
+                          <div className="creator-name-row">
+                            <p className="creator-name">{profile.name}</p>
+                            <p className="creator-username">{profile.handle}</p>
+                          </div>
+                          <p className="creator-bio">{profile.note}</p>
+                        </div>
+                        <div className="creator-card-footer">
+                          <div className="creator-card-stats">
+                            <span className="creator-stat">
+                              <span className="creator-stat-icon followers" />
+                              {profile.followers}
+                            </span>
+                            <span className="creator-stat">
+                              <span className="creator-stat-icon posts" />
+                              {profile.posts}
+                            </span>
+                          </div>
+                          <button className="creator-follow-btn" type="button">
+                            Follow
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {trailingBlogs.map((blog) => (
+                <article key={blog.id} className="discover-card">
+                  <div className="discover-card-meta">
+                    <span>{blog.category}</span>
+                    <span>{blog.views} views</span>
+                  </div>
+                  <h2 className="discover-card-title">{blog.title}</h2>
+                  <p className="discover-card-summary">{blog.summary}</p>
+                  <div className="discover-card-meta discover-card-footer">
+                    <span>
+                      {blog.author} · {blog.readTime}
+                    </span>
+                    <Link
+                      to={`/post/${blog.id}`}
+                      className="read-now-btn"
+                      aria-label={`Read ${blog.title}`}
+                    >
+                      Read now →
+                    </Link>
+                  </div>
+                  <div className="card-tags">
+                    <span className="card-tag">#discover</span>
+                    <span className="card-tag">
+                      #{blog.category.toLowerCase()}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </>
+          )}
+        </section>
       </div>
     </div>
   );

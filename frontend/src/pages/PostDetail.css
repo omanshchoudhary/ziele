@@ -1,0 +1,142 @@
+.post-detail-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.post-detail-back-row {
+  display: flex;
+  align-items: center;
+}
+
+.post-detail-back-btn {
+  margin-bottom: 0.5rem;
+}
+
+.post-detail-main-card {
+  margin-bottom: 0.5rem;
+}
+
+.post-detail-body {
+  gap: 1rem;
+}
+
+.post-detail-title {
+  font-size: 2rem !important;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+  display: block;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+}
+
+.post-detail-meta-row {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.post-detail-paragraphs {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 0.6rem;
+}
+
+.post-detail-paragraph {
+  margin-bottom: 0 !important;
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  color: #c9c9c9;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+.post-detail-actions {
+  margin-top: 1.2rem;
+}
+
+.post-detail-related {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.post-detail-related-title {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.post-detail-related-empty {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.post-detail-related-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.post-detail-related-card {
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem 1.2rem;
+}
+
+.post-detail-related-card-title {
+  font-size: 1.1rem !important;
+}
+
+.post-detail-not-found {
+  display: grid;
+  gap: 1rem;
+}
+
+.post-detail-not-found-title {
+  margin-bottom: 0;
+}
+
+.post-detail-not-found-text {
+  color: var(--text-muted);
+}
+
+@media (max-width: 900px) {
+  .post-detail-title {
+    font-size: 1.65rem !important;
+  }
+
+  .post-detail-paragraph {
+    font-size: 0.96rem;
+    line-height: 1.72;
+  }
+}
+
+@media (max-width: 640px) {
+  .post-detail-page {
+    gap: 1.1rem;
+  }
+
+  .post-detail-title {
+    font-size: 1.4rem !important;
+  }
+
+  .post-detail-meta-row {
+    font-size: 0.84rem;
+    gap: 0.55rem;
+  }
+
+  .post-detail-related-card {
+    padding: 0.9rem 1rem;
+  }
+
+  .post-detail-related-card-title {
+    font-size: 1rem !important;
+  }
+
+  .post-detail-paragraph {
+    font-size: 0.92rem;
+  }
+}
