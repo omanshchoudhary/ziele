@@ -13,7 +13,7 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
     const params = new URLSearchParams(location.search);
     const queryFromUrl = params.get("q") || "";
 
-    if (location.pathname === "/discover") {
+    if (location.pathname === "/discover" || location.pathname === "/communities") {
       setSearchQuery(queryFromUrl);
     } else if (queryFromUrl && searchQuery !== queryFromUrl) {
       setSearchQuery(queryFromUrl);
@@ -33,7 +33,8 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
     }
 
     const nextQuery = params.toString();
-    navigate(`/discover${nextQuery ? `?${nextQuery}` : ""}`);
+    const targetPath = location.pathname === "/communities" ? "/communities" : "/discover";
+    navigate(`${targetPath}${nextQuery ? `?${nextQuery}` : ""}`);
   };
 
   const clearSearch = () => {
@@ -41,8 +42,10 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
     const params = new URLSearchParams(location.search);
     params.delete("q");
     const nextQuery = params.toString();
-    navigate(`/discover${nextQuery ? `?${nextQuery}` : ""}`);
+    const targetPath = location.pathname === "/communities" ? "/communities" : "/discover";
+    navigate(`${targetPath}${nextQuery ? `?${nextQuery}` : ""}`);
   };
+
 
   const getNavLinkClass = ({ isActive }) =>
     `nav-btn${isActive ? " active" : ""}`;

@@ -402,3 +402,59 @@ export function deleteComment(commentId) {
   }
   return false;
 }
+export const mockCommunities = [
+  {
+    id: 1,
+    name: "Tech Enclave",
+    members: 12400,
+    tags: ["React", "JavaScript", "Architecture"],
+    description: "The primary hub for all things software engineering. Discuss the latest frameworks and best practices.",
+    category: "Technology",
+    icon: "💻"
+  },
+  {
+    id: 2,
+    name: "Writers' Guild",
+    members: 8900,
+    tags: ["Storytelling", "Editing", "Fiction"],
+    description: "A sanctuary for writers. Share drafts, get feedback, and hone your craft.",
+    category: "Writing",
+    icon: "✍️"
+  },
+  {
+    id: 3,
+    name: "Design Collective",
+    members: 15600,
+    tags: ["UI/UX", "Product Design", "Figma"],
+    description: "Visual thinkers and problem solvers unit here to share inspiration and resources.",
+    category: "UX",
+    icon: "🎨"
+  },
+  {
+    id: 4,
+    name: "Productivity Lab",
+    members: 11200,
+    tags: ["Habits", "Focus", "Tools"],
+    description: "Master your workflow and optimize your daily life for peak performance.",
+    category: "Productivity",
+    icon: "⚡"
+  },
+  {
+    id: 5,
+    name: "Growth Strategy",
+    members: 9500,
+    tags: ["SaaS", "Marketing", "Scaling"],
+    description: "Insights and playbooks for scaling products and building sustainable businesses.",
+    category: "Strategy",
+    icon: "📈"
+  },
+  {
+    id: 6,
+    name: "Minimalist Life",
+    members: 7800,
+    tags: ["Lifestyle", "Simplicity", "Digital Detox"],
+    description: "Exploring the beauty of less. Practical tips for a simpler, more meaningful life.",
+    category: "Community",
+    icon: "🍃"
+  }
+];
