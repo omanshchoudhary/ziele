@@ -16,6 +16,7 @@ import Connections from "./pages/Connections";
 import TrendingPage from "./pages/TrendingPage";
 import Communities from "./pages/Communities";
 import GenericPlaceholder from "./pages/GenericPlaceholder";
+import Analytics from "./pages/Analytics";
 import FloatingPanel from "./components/FloatingPanel";
 
 const THEME_STORAGE_KEY = "ziele-theme";
@@ -42,7 +43,8 @@ function getInitialTheme() {
 
 function App() {
   const location = useLocation();
-  const hideSidebar = location.pathname === "/discover";
+  const hideSidebar =
+    location.pathname === "/discover" || location.pathname === "/analytics";
 
   const [theme, setTheme] = React.useState(getInitialTheme);
 
@@ -86,7 +88,7 @@ function App() {
             <Route path="/connections" element={<Connections />} />
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/communities" element={<Communities />} />
-            <Route path="/analytics" element={<GenericPlaceholder />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/drafts" element={<GenericPlaceholder />} />
             <Route path="/bookmarks" element={<GenericPlaceholder />} />
             <Route path="/settings" element={<GenericPlaceholder />} />
