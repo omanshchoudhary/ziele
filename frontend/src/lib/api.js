@@ -1,6 +1,33 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
+let authTokenGetter = null;
+
+export function setAuthTokenGetter(getter) {
+  authTokenGetter = typeof getter === "function" ? getter : null;
+}
+
+async function buildHeaders(options = {}) {
+  const headers = new Headers(options.headers || {});
+
+  if (options.body != null && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (authTokenGetter && !headers.has("Authorization")) {
+    try {
+      const token = await authTokenGetter();
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+    } catch {
+      // Ignore token lookup failures for public requests.
+    }
+  }
+
+  return headers;
+}
+
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");
@@ -14,12 +41,10 @@ async function parseResponse(response) {
 }
 
 export async function fetchJson(path, options = {}) {
+  const headers = await buildHeaders(options);
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
     ...options,
+    headers,
   });
 
   return parseResponse(response);
@@ -53,8 +78,10 @@ export function createComment(postId, payload) {
 }
 
 export async function deleteComment(id) {
+  const headers = await buildHeaders({ method: "DELETE" });
   const response = await fetch(`${API_BASE_URL}/api/comments/${id}`, {
     method: "DELETE",
+    headers,
   });
 
   if (!response.ok) {

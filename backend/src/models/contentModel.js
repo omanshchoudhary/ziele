@@ -1,18 +1,22 @@
-import { readStore, withStore } from '../data/store.js';
+import { readStore, withStore } from "../data/store.js";
 import {
   estimateReadTime,
   formatCompactNumber,
   formatRelativeTime,
   normalizeHandle,
   stripHtml,
-} from '../utils/contentUtils.js';
+} from "../utils/contentUtils.js";
 
 function nextId(items) {
-  return items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
+  return (
+    items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1
+  );
 }
 
 function enrichPost(post, state) {
-  const commentCount = state.comments.filter((comment) => Number(comment.postId) === Number(post.id)).length;
+  const commentCount = state.comments.filter(
+    (comment) => Number(comment.postId) === Number(post.id),
+  ).length;
   return {
     ...post,
     contentText: stripHtml(post.content),
@@ -42,29 +46,42 @@ export function getPostById(id) {
 }
 
 export function createPost(input) {
-  const title = String(input.title || '').trim();
-  const content = String(input.content || '').trim();
+  const title = String(input.title || "").trim();
+  const content = String(input.content || "").trim();
 
   if (!title || !content) {
-    throw new Error('Title and content are required');
+    throw new Error("Title and content are required");
   }
 
   const state = withStore((draft) => {
-    const authorHandle = normalizeHandle(input.authorHandle || '@currentuser');
-    const profile =
-      draft.profiles.find((item) => normalizeHandle(item.handle) === authorHandle) ||
-      draft.profiles[0];
+    const requestedProfileId = String(input.profileId || "").trim();
+    const authorHandle = normalizeHandle(input.authorHandle || "@currentuser");
+
+    const profileById = requestedProfileId
+      ? draft.profiles.find((item) => String(item.id) === requestedProfileId)
+      : null;
+
+    const profileByHandle = draft.profiles.find(
+      (item) => normalizeHandle(item.handle) === authorHandle,
+    );
+
+    const profile = profileById || profileByHandle || draft.profiles[0];
 
     const tags = Array.isArray(input.tags)
-      ? input.tags.map((tag) => String(tag).trim()).filter(Boolean).slice(0, 8)
+      ? input.tags
+          .map((tag) => String(tag).trim())
+          .filter(Boolean)
+          .slice(0, 8)
       : [];
 
     const createdPost = {
       id: nextId(draft.posts),
-      profileId: profile?.id || 'currentuser',
-      avatar: profile?.avatar || 'YU',
-      authorName: profile?.name || 'You',
-      authorHandle: profile?.handle || '@currentuser',
+      profileId: profile?.id || requestedProfileId || "currentuser",
+      avatar: String(input.avatar || profile?.avatar || "YU"),
+      authorName: String(input.authorName || profile?.name || "You"),
+      authorHandle: String(
+        input.authorHandle || profile?.handle || "@currentuser",
+      ),
       title,
       content,
       tags,
@@ -72,8 +89,8 @@ export function createPost(input) {
       dislikes: 0,
       bookmarks: 0,
       views: 1,
-      coverUrl: String(input.coverUrl || '').trim(),
-      language: String(input.language || 'English'),
+      coverUrl: String(input.coverUrl || "").trim(),
+      language: String(input.language || "English"),
       premium: Boolean(input.premium),
       createdAt: new Date().toISOString(),
     };
@@ -114,7 +131,8 @@ export function getCommentsByPostId(postId) {
   return state.comments
     .filter((comment) => Number(comment.postId) === Number(postId))
     .sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
     .map((comment) => ({
       ...comment,
@@ -123,23 +141,23 @@ export function getCommentsByPostId(postId) {
 }
 
 export function createComment(postId, input) {
-  const content = String(input.content || '').trim();
+  const content = String(input.content || "").trim();
   if (!content) {
-    throw new Error('Comment content is required');
+    throw new Error("Comment content is required");
   }
 
   const nextState = withStore((draft) => {
     const post = draft.posts.find((item) => Number(item.id) === Number(postId));
     if (!post) {
-      throw new Error('Post not found');
+      throw new Error("Post not found");
     }
 
     draft.comments.unshift({
       id: nextId(draft.comments),
       postId: Number(postId),
-      authorName: String(input.authorName || 'You'),
-      authorHandle: String(input.authorHandle || '@currentuser'),
-      avatar: String(input.avatar || 'YU'),
+      authorName: String(input.authorName || "You"),
+      authorHandle: String(input.authorHandle || "@currentuser"),
+      avatar: String(input.avatar || "YU"),
       content,
       createdAt: new Date().toISOString(),
     });
@@ -158,7 +176,9 @@ export function deleteCommentById(commentId) {
   let deleted = false;
 
   withStore((draft) => {
-    const index = draft.comments.findIndex((item) => Number(item.id) === Number(commentId));
+    const index = draft.comments.findIndex(
+      (item) => Number(item.id) === Number(commentId),
+    );
     if (index !== -1) {
       draft.comments.splice(index, 1);
       deleted = true;
@@ -177,7 +197,8 @@ export function getNotifications() {
       timestamp: notification.timestamp || new Date().toISOString(),
     }))
     .sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
 }
 
@@ -188,16 +209,21 @@ export function getProfiles() {
 
 export function getProfileById(profileId) {
   const state = readStore();
-  const normalized = normalizeHandle(profileId || state.profiles[0]?.id || '');
+  const normalized = normalizeHandle(profileId || state.profiles[0]?.id || "");
   const profile =
     state.profiles.find((item) => normalizeHandle(item.id) === normalized) ||
-    state.profiles.find((item) => normalizeHandle(item.handle) === normalized) ||
+    state.profiles.find(
+      (item) => normalizeHandle(item.handle) === normalized,
+    ) ||
     null;
 
   if (!profile) return null;
 
   const posts = sortPosts(state.posts)
-    .filter((post) => normalizeHandle(post.authorHandle) === normalizeHandle(profile.handle))
+    .filter(
+      (post) =>
+        normalizeHandle(post.authorHandle) === normalizeHandle(profile.handle),
+    )
     .map((post) => enrichPost(post, state));
 
   return {
@@ -223,7 +249,7 @@ export function getSidebarData() {
     .map(([topic, score]) => ({
       topic,
       posts: score,
-      tag: `#${topic.replace(/\s+/g, '')}`,
+      tag: `#${topic.replace(/\s+/g, "")}`,
     }));
 
   const suggestions = getProfiles()
@@ -242,19 +268,26 @@ export function getSidebarData() {
 
 export function getDiscoverData(query = {}) {
   const posts = getPosts();
-  const categories = ['Recommended', ...new Set(posts.flatMap((post) => post.tags))];
-  const creators = getProfiles().slice(0, 4).map((profile) => ({
-    id: profile.id,
-    initials: profile.avatar,
-    name: profile.name,
-    handle: profile.handle,
-    note: profile.bio,
-    followers: formatCompactNumber(profile.followers),
-    posts: String(profile.posts),
-  }));
+  const categories = [
+    "Recommended",
+    ...new Set(posts.flatMap((post) => post.tags)),
+  ];
+  const creators = getProfiles()
+    .slice(0, 4)
+    .map((profile) => ({
+      id: profile.id,
+      initials: profile.avatar,
+      name: profile.name,
+      handle: profile.handle,
+      note: profile.bio,
+      followers: formatCompactNumber(profile.followers),
+      posts: String(profile.posts),
+    }));
 
-  const tagQuery = normalizeHandle(query.tag || '');
-  const search = String(query.q || '').trim().toLowerCase();
+  const tagQuery = normalizeHandle(query.tag || "");
+  const search = String(query.q || "")
+    .trim()
+    .toLowerCase();
 
   const blogs = posts
     .map((post) => ({
@@ -262,7 +295,7 @@ export function getDiscoverData(query = {}) {
       title: post.title,
       summary: post.summary,
       author: post.authorName,
-      category: post.tags[0] || 'Recommended',
+      category: post.tags[0] || "Recommended",
       views: formatCompactNumber(post.views || 0),
       readTime: post.readTime,
     }))
@@ -274,7 +307,8 @@ export function getDiscoverData(query = {}) {
         blog.author.toLowerCase().includes(search) ||
         blog.category.toLowerCase().includes(search);
 
-      const matchesTag = !tagQuery || normalizeHandle(blog.category) === tagQuery;
+      const matchesTag =
+        !tagQuery || normalizeHandle(blog.category) === tagQuery;
       return matchesSearch && matchesTag;
     });
 

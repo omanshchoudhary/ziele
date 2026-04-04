@@ -1,8 +1,13 @@
-import express from 'express';
-import { deleteComment } from '../controllers/commentController.js';
+import express from "express";
+import { deleteComment } from "../controllers/commentController.js";
+import {
+  requireAuthWithContext,
+  requireUserId,
+} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.delete('/:id', deleteComment);
+// Protected: only authenticated users can delete comments
+router.delete("/:id", requireAuthWithContext, requireUserId, deleteComment);
 
 export default router;

@@ -8,11 +8,7 @@
       "authorHandle": "@omansh",
       "title": "The Future of Web Dev",
       "content": "<p>As we move further into the decade, the landscape of the web continues to evolve at a breakneck pace.</p><p>This is a deep dive into what the future holds for developers building fast, collaborative, and resilient products.</p>",
-      "tags": [
-        "Technology",
-        "React",
-        "Design"
-      ],
+      "tags": ["Technology", "React", "Design"],
       "likes": 1200,
       "dislikes": 34,
       "bookmarks": 89,
@@ -30,11 +26,7 @@
       "authorHandle": "@zieleapp",
       "title": "Ziele: Next-Gen Social Blogging",
       "content": "<p>We're excited to launch Ziele, a platform designed for writers by writers.</p><p>Our mission is to provide a clean space to share your thoughts, discover great stories, and build a thoughtful creator community.</p>",
-      "tags": [
-        "Platform",
-        "Updates",
-        "News"
-      ],
+      "tags": ["Platform", "Updates", "News"],
       "likes": 4500,
       "dislikes": 22,
       "bookmarks": 270,
@@ -52,11 +44,7 @@
       "authorHandle": "@janesmith",
       "title": "Minimalist UI is Here to Stay",
       "content": "<p>In an era of information overload, simplicity is the ultimate sophistication.</p><p>Designers are returning to the basics with minimalist interfaces that feel calm, purposeful, and fast.</p>",
-      "tags": [
-        "Design",
-        "UI/UX",
-        "Trends"
-      ],
+      "tags": ["Design", "UI/UX", "Trends"],
       "likes": 892,
       "dislikes": 11,
       "bookmarks": 74,
@@ -74,11 +62,7 @@
       "authorHandle": "@arivera",
       "title": "Shipping Fast with Vite + React",
       "content": "<p>A practical guide to structuring React apps with Vite for blazing-fast feedback loops.</p><p>We'll look at tooling, architecture, and a few habits that keep projects maintainable as they grow.</p>",
-      "tags": [
-        "React",
-        "Vite",
-        "Performance"
-      ],
+      "tags": ["React", "Vite", "Performance"],
       "likes": 1530,
       "dislikes": 19,
       "bookmarks": 111,
@@ -96,11 +80,7 @@
       "authorHandle": "@mirachen",
       "title": "Writing Better Product Stories",
       "content": "<p>Great products deserve great stories.</p><p>Learn how to translate product decisions into narratives users instantly connect with across launch pages, changelogs, and onboarding.</p>",
-      "tags": [
-        "Writing",
-        "Product",
-        "Storytelling"
-      ],
+      "tags": ["Writing", "Product", "Storytelling"],
       "likes": 980,
       "dislikes": 8,
       "bookmarks": 92,
@@ -212,6 +192,7 @@
       "createdAt": "2026-01-14T10:10:00.000Z"
     }
   ],
+  "users": [],
   "notifications": [
     {
       "id": 1,

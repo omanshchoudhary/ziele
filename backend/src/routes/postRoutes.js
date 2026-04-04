@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import {
   createPostComment,
   createPostItem,
@@ -7,16 +7,28 @@ import {
   getPostComments,
   getRandomPostItem,
   getRelatedPostItems,
-} from '../controllers/postController.js';
+} from "../controllers/postController.js";
+import {
+  requireAuthWithContext,
+  requireUserId,
+} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get('/random', getRandomPostItem);
-router.get('/', getAllPosts);
-router.post('/', createPostItem);
-router.get('/:id/comments', getPostComments);
-router.post('/:id/comments', createPostComment);
-router.get('/:id/related', getRelatedPostItems);
-router.get('/:id', getPostById);
+// Public read routes
+router.get("/random", getRandomPostItem);
+router.get("/", getAllPosts);
+router.get("/:id/comments", getPostComments);
+router.get("/:id/related", getRelatedPostItems);
+router.get("/:id", getPostById);
+
+// Protected write routes (Clerk auth required)
+router.post("/", requireAuthWithContext, requireUserId, createPostItem);
+router.post(
+  "/:id/comments",
+  requireAuthWithContext,
+  requireUserId,
+  createPostComment,
+);
 
 export default router;

@@ -1,4 +1,4 @@
-# PRD: AI-Powered Social Blogging Platform
+﻿# PRD: AI-Powered Social Blogging Platform
 
 ## 1. Project Overview
 

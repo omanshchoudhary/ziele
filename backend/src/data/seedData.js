@@ -200,6 +200,7 @@ export const seedData = {
       createdAt: "2026-01-14T10:10:00.000Z",
     },
   ],
+  users: [],
   notifications: [
     {
       id: 1,
