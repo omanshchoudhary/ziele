@@ -11,6 +11,13 @@
   padding: 2.5rem 5%;
 }
 
+.main-layout.discover-full {
+  grid-template-columns: 1fr;
+  max-width: none;
+  padding: 2.5rem 3%;
+  width: 100%;
+}
+
 @media (max-width: 1000px) {
   .main-layout {
     grid-template-columns: 1fr;

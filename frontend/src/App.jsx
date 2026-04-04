@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import './styles/variables.css';
 import './styles/base.css';
 import './styles/layout.css';
@@ -15,11 +15,14 @@ import Profile from './pages/Profile';
 import FloatingPanel from './components/FloatingPanel';
 
 function App() {
+  const location = useLocation();
+  const hideSidebar = location.pathname === '/discover';
+
   return (
     <div className="app">
       <FloatingPanel />
       <Navbar />
-      <div className="main-layout">
+      <div className={`main-layout${hideSidebar ? ' discover-full' : ''}`}>
         <main className="feed-content">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -31,7 +34,7 @@ function App() {
             <Route path="/profile/:id" element={<Profile />} />
           </Routes>
         </main>
-        <Sidebar />
+        {!hideSidebar && <Sidebar />}
       </div>
     </div>
   );
