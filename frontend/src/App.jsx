@@ -12,6 +12,10 @@ import PostDetail from './pages/PostDetail';
 import CreatePost from './pages/CreatePost';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import Connections from './pages/Connections';
+import TrendingPage from './pages/TrendingPage';
+import Communities from './pages/Communities';
+import GenericPlaceholder from './pages/GenericPlaceholder';
 import FloatingPanel from './components/FloatingPanel';
 
 function App() {
@@ -32,6 +36,14 @@ function App() {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/connections" element={<Connections />} />
+            <Route path="/trending" element={<TrendingPage />} />
+            <Route path="/communities" element={<Communities />} />
+            <Route path="/analytics" element={<GenericPlaceholder />} />
+            <Route path="/drafts" element={<GenericPlaceholder />} />
+            <Route path="/bookmarks" element={<GenericPlaceholder />} />
+            <Route path="/settings" element={<GenericPlaceholder />} />
+            <Route path="/more" element={<GenericPlaceholder />} />
           </Routes>
         </main>
         {!hideSidebar && <Sidebar />}
