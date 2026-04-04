@@ -295,8 +295,10 @@ Most student-level blogging systems only support create/read posts and basic com
 ### 10.1 Planning and Setup
 - [x] Freeze project name, scope, and acceptance criteria.
 - [x] Create Git repository and branch strategy (`main`, `dev`, feature branches).
-- [x] Initialize React frontend and Express+tRPC backend structure.
-- [ ] Configure TypeScript (if used), ESLint, Prettier.
+- [x] Initialize React frontend structure.
+- [ ] Initialize Express+tRPC backend structure (Current: Basic Express shell).
+- [x] Configure TypeScript (Vite + tsconfig base).
+- [ ] Configure ESLint, Prettier.
 - [x] Create `.env.example` with all required keys.
 - [ ] Setup Clerk project and keys.
 - [ ] Setup PostgreSQL instance and Prisma connection.
@@ -315,11 +317,11 @@ Most student-level blogging systems only support create/read posts and basic com
 - [ ] Integrate Clerk on frontend.
 - [ ] Add backend middleware for authenticated routes.
 - [ ] Sync Clerk user to local DB on first login.
-- [ ] Build profile page (avatar, bio, badge, streak).
+- [x] Build profile page (avatar, bio, badge, streak) (UI Done).
 
 ### 10.4 Blog Editor and Post Management
 - [ ] Integrate Quill.js editor.
-- [ ] Build create post form (title, content, tags, cover/media).
+- [x] Build create post form UI (title, content, tags, cover/media).
 - [ ] Implement post create/read/update/delete APIs.
 - [ ] Add slug/link generation for shareable URLs.
 - [ ] Sanitize/validate rich text payload before storing.
@@ -331,20 +333,20 @@ Most student-level blogging systems only support create/read posts and basic com
 
 ### 10.6 Social Features
 - [ ] Implement follow/unfollow APIs.
-- [ ] Show follower/following counts and lists.
-- [ ] Add follow CTA on profile/post cards.
+- [x] Show follower/following counts and lists (UI Done).
+- [x] Add follow CTA on profile/post cards (UI Done).
 
 ### 10.7 Engagement Features
-- [ ] Implement like/dislike toggle with mutual exclusivity.
+- [x] Implement like/dislike toggle (Frontend Done).
 - [ ] Build comment CRUD (minimum create/read/delete-own).
-- [ ] Implement bookmark toggle and bookmarks page.
+- [x] Implement bookmark toggle and bookmarks page (Frontend Done).
 - [ ] Update counts in UI in near real-time.
 
 ### 10.8 Discovery and Communities
 - [ ] Build trending algorithm (engagement + recency score).
 - [ ] Build recommendations endpoint (manual logic).
 - [ ] Implement magic random post endpoint.
-- [ ] Build communities pages based on tags/topics.
+- [x] Build communities/discover pages based on tags/topics (UI Done).
 
 ### 10.9 AI Features
 - [ ] Implement translation endpoint with LibreTranslate.
@@ -354,10 +356,10 @@ Most student-level blogging systems only support create/read posts and basic com
 - [ ] Add graceful fallback messaging when AI service fails.
 
 ### 10.10 Notifications (Realtime)
-- [x] Setup Socket.io server and client integration.
+- [ ] Setup Socket.io server and client integration.
 - [ ] Setup Redis pub/sub channels for distributed notifications.
 - [ ] Trigger notifications on follow/comment/reaction.
-- [ ] Build notifications panel and unread badge.
+- [x] Build notifications panel and unread badge (UI Done).
 
 ### 10.11 Email Reminders
 - [ ] Create React Email templates.
@@ -384,9 +386,9 @@ Most student-level blogging systems only support create/read posts and basic com
 - [ ] Add abuse checks for comments and post spam.
 
 ### 10.15 UI/UX and Theme
-- [ ] Implement responsive layouts (mobile + desktop).
-- [ ] Build light/dark theme toggle.
-- [ ] Persist theme preference.
+- [x] Implement responsive layouts (mobile + desktop).
+- [x] Build light/dark theme toggle.
+- [x] Persist theme preference (Local Storage).
 - [ ] Polish loading states, error states, empty states.
 
 ### 10.16 Testing
