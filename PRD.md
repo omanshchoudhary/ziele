@@ -314,7 +314,7 @@ Most student-level blogging systems only support create/read posts and basic com
 - [ ] Add indexes on hot queries (post createdAt, tags, reactions, follow relations).
 
 ### 10.3 Authentication and User Module
-- [ ] Integrate Clerk on frontend.
+- [x] Integrate Clerk on frontend.
 - [ ] Add backend middleware for authenticated routes.
 - [ ] Sync Clerk user to local DB on first login.
 - [x] Build profile page (avatar, bio, badge, streak) (UI Done).
