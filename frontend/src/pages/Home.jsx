@@ -84,7 +84,56 @@ function Home() {
     setSearchParams(next);
   };
 
+  const getNextReactionSnapshot = (previous = {}, type) => {
+    const next = {
+      liked: Boolean(previous.liked),
+      disliked: Boolean(previous.disliked),
+      bookmarked: Boolean(previous.bookmarked),
+      likes: previous.likes || 0,
+      dislikes: previous.dislikes || 0,
+      bookmarks: previous.bookmarks || 0,
+    };
+
+    if (type === "like") {
+      if (next.liked) {
+        next.liked = false;
+        next.likes = Math.max(0, next.likes - 1);
+      } else {
+        next.liked = true;
+        next.likes += 1;
+        if (next.disliked) {
+          next.disliked = false;
+          next.dislikes = Math.max(0, next.dislikes - 1);
+        }
+      }
+    }
+
+    if (type === "dislike") {
+      if (next.disliked) {
+        next.disliked = false;
+        next.dislikes = Math.max(0, next.dislikes - 1);
+      } else {
+        next.disliked = true;
+        next.dislikes += 1;
+        if (next.liked) {
+          next.liked = false;
+          next.likes = Math.max(0, next.likes - 1);
+        }
+      }
+    }
+
+    return next;
+  };
+
   const syncReactionState = async (postId, type) => {
+    const previousState = reactionState[postId] || {};
+    const optimisticState = getNextReactionSnapshot(previousState, type);
+
+    setReactionState((current) => ({
+      ...current,
+      [postId]: optimisticState,
+    }));
+
     try {
       const response = await reactToPost(postId, type);
       if (!response?.post) return;
@@ -105,6 +154,10 @@ function Home() {
         },
       }));
     } catch (reactionError) {
+      setReactionState((current) => ({
+        ...current,
+        [postId]: previousState,
+      }));
       window.alert(reactionError.message || "Unable to save your reaction.");
     }
   };
@@ -118,6 +171,20 @@ function Home() {
   };
 
   const onBookmark = (postId) => {
+    const previousState = reactionState[postId] || {};
+    const optimisticState = {
+      ...previousState,
+      bookmarked: !previousState.bookmarked,
+      bookmarks: previousState.bookmarked
+        ? Math.max(0, (previousState.bookmarks || 0) - 1)
+        : (previousState.bookmarks || 0) + 1,
+    };
+
+    setReactionState((current) => ({
+      ...current,
+      [postId]: optimisticState,
+    }));
+
     toggleBookmark(postId)
       .then((response) => {
         if (!response?.post) return;
@@ -141,6 +208,10 @@ function Home() {
         }));
       })
       .catch((bookmarkError) => {
+        setReactionState((current) => ({
+          ...current,
+          [postId]: previousState,
+        }));
         window.alert(bookmarkError.message || "Unable to save bookmark.");
       });
   };
@@ -256,20 +327,24 @@ function Home() {
 
         return (
           <article key={post.id} className="post-card">
-            <div className="post-header-top">
+            <div className="post-header-top post-header-top--feed">
               <div className="post-author-avatar">{post.avatar}</div>
               <div className="post-author-info">
-                <span className="post-author-name">{post.authorName}</span>
+                <div className="post-author-row">
+                  <span className="post-author-name">{post.authorName}</span>
+                  <FollowButton
+                    profileId={post.profileId}
+                    profileName={post.authorName}
+                    initialIsFollowing={post.isFollowingAuthor}
+                    isOwnProfile={post.isOwnAuthor}
+                    className="follow-btn post-follow-btn"
+                  />
+                </div>
                 <span className="post-author-handle">{post.authorHandle}</span>
               </div>
-              <FollowButton
-                profileId={post.profileId}
-                profileName={post.authorName}
-                initialIsFollowing={post.isFollowingAuthor}
-                isOwnProfile={post.isOwnAuthor}
-                className="follow-btn post-follow-btn"
-              />
-              <span className="post-time">{post.time}</span>
+              <div className="post-header-actions">
+                <span className="post-time">{post.time}</span>
+              </div>
             </div>
 
             <div className="post-body-mid">

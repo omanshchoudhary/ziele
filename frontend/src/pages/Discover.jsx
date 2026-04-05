@@ -8,6 +8,13 @@ function normalizeTag(value) {
   return (value || "").trim().toLowerCase().replace(/^#/, "");
 }
 
+function parseTagQuery(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => normalizeTag(item))
+    .filter(Boolean);
+}
+
 function Discover() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -20,31 +27,12 @@ function Discover() {
 
   const searchQueryRaw = (searchParams.get("q") || "").trim();
   const searchQuery = searchQueryRaw.toLowerCase();
-  const tagQuery = normalizeTag(searchParams.get("tag"));
-
-  useEffect(() => {
-    if (!tagQuery) return;
-
-    const matchedCategory = discoverData.categories.find(
-      (category) =>
-        category !== "Recommended" && normalizeTag(category) === tagQuery,
-    );
-
-    if (matchedCategory) {
-      setSelectedCategories([matchedCategory]);
-    }
-  }, [discoverData.categories, tagQuery]);
+  const urlTags = parseTagQuery(searchParams.get("tag"));
 
   useEffect(() => {
     let cancelled = false;
 
-    getDiscoverData({
-      q: searchQueryRaw,
-      tag:
-        selectedCategories.length === 1
-          ? normalizeTag(selectedCategories[0])
-          : tagQuery,
-    })
+    getDiscoverData({ q: searchQueryRaw })
       .then((data) => {
         if (!cancelled) {
           setDiscoverData(data);
@@ -60,9 +48,37 @@ function Discover() {
     return () => {
       cancelled = true;
     };
-  }, [searchQueryRaw, selectedCategories, tagQuery]);
+  }, [searchQueryRaw]);
 
-  const visibleBlogs = useMemo(() => discoverData.blogs, [discoverData.blogs]);
+  useEffect(() => {
+    if (urlTags.length === 0) {
+      setSelectedCategories([]);
+      return;
+    }
+
+    const matchedCategories = discoverData.categories.filter(
+      (category) =>
+        category !== "Recommended" &&
+        urlTags.includes(normalizeTag(category)),
+    );
+
+    setSelectedCategories(matchedCategories);
+  }, [discoverData.categories, urlTags]);
+
+  const activeTags = useMemo(
+    () => selectedCategories.map((category) => normalizeTag(category)),
+    [selectedCategories],
+  );
+
+  const visibleBlogs = useMemo(() => {
+    if (activeTags.length === 0) {
+      return discoverData.blogs;
+    }
+
+    return discoverData.blogs.filter((blog) =>
+      activeTags.includes(normalizeTag(blog.category)),
+    );
+  }, [activeTags, discoverData.blogs]);
 
   const updateParams = (updater) => {
     const next = new URLSearchParams(searchParams);
@@ -84,21 +100,22 @@ function Discover() {
     }
 
     setSelectedCategories((current) => {
-      if (current.includes(category)) {
-        const next = current.filter((item) => item !== category);
-        updateParams((params) => {
-          if (next.length === 0) params.delete("tag");
-          else params.set("tag", normalizeTag(next[0]));
-        });
-        return next;
-      }
+      const exists = current.includes(category);
+      const next = exists
+        ? current.filter((item) => item !== category)
+        : [...current, category];
 
-      const next = [...current, category];
-      if (next.length === 1) {
-        updateParams((params) => {
-          params.set("tag", normalizeTag(category));
-        });
-      }
+      updateParams((params) => {
+        if (next.length === 0) {
+          params.delete("tag");
+        } else {
+          params.set(
+            "tag",
+            next.map((item) => normalizeTag(item)).join(","),
+          );
+        }
+      });
+
       return next;
     });
   };
@@ -118,11 +135,16 @@ function Discover() {
           tailored to your interests.
         </p>
 
-        {(searchQuery || tagQuery) && (
+        {(searchQuery || activeTags.length > 0) && (
           <p className="discover-results-hint">
             Showing results
-            {searchQuery ? ` for “${searchQueryRaw}”` : ""}
-            {tagQuery ? `${searchQuery ? " and " : " for "}#${tagQuery}` : ""}.
+            {searchQuery ? ` for "${searchQueryRaw}"` : ""}
+            {activeTags.length > 0
+              ? `${searchQuery ? " and" : " for"} ${activeTags
+                  .map((tag) => `#${tag}`)
+                  .join(", ")}`
+              : ""}
+            .
           </p>
         )}
       </div>
@@ -166,7 +188,7 @@ function Discover() {
               </div>
               <h2 className="discover-card-title">No posts found</h2>
               <p className="discover-card-summary">
-                We couldn’t find content matching your current filters. Try a
+                We could not find content matching your current filters. Try a
                 different search term or switch back to Recommended.
               </p>
             </article>
@@ -178,12 +200,33 @@ function Discover() {
                     <span>{blog.category}</span>
                     <span>{blog.views} views</span>
                   </div>
+                  <div className="discover-card-author">
+                    <div className="discover-card-author-main">
+                      <div className="discover-card-author-topline">
+                        <span className="discover-card-author-name">
+                          {blog.author}
+                        </span>
+                        <span className="discover-card-author-dot">•</span>
+                        <span className="discover-card-author-time">
+                          {blog.time || "Just now"}
+                        </span>
+                        <FollowButton
+                          profileId={blog.profileId}
+                          profileName={blog.author}
+                          initialIsFollowing={blog.isFollowingAuthor}
+                          isOwnProfile={blog.isOwnAuthor}
+                          className="discover-card-follow-btn follow-btn"
+                        />
+                      </div>
+                      <span className="discover-card-author-handle">
+                        {blog.authorHandle || "@creator"}
+                      </span>
+                    </div>
+                  </div>
                   <h2 className="discover-card-title">{blog.title}</h2>
                   <p className="discover-card-summary">{blog.summary}</p>
                   <div className="discover-card-meta discover-card-footer">
-                    <span>
-                      {blog.author} · {blog.readTime}
-                    </span>
+                    <span>{blog.readTime}</span>
                     <Link
                       to={`/post/${blog.id}`}
                       className="read-now-btn"
@@ -268,12 +311,33 @@ function Discover() {
                     <span>{blog.category}</span>
                     <span>{blog.views} views</span>
                   </div>
+                  <div className="discover-card-author">
+                    <div className="discover-card-author-main">
+                      <div className="discover-card-author-topline">
+                        <span className="discover-card-author-name">
+                          {blog.author}
+                        </span>
+                        <span className="discover-card-author-dot">•</span>
+                        <span className="discover-card-author-time">
+                          {blog.time || "Just now"}
+                        </span>
+                        <FollowButton
+                          profileId={blog.profileId}
+                          profileName={blog.author}
+                          initialIsFollowing={blog.isFollowingAuthor}
+                          isOwnProfile={blog.isOwnAuthor}
+                          className="discover-card-follow-btn follow-btn"
+                        />
+                      </div>
+                      <span className="discover-card-author-handle">
+                        {blog.authorHandle || "@creator"}
+                      </span>
+                    </div>
+                  </div>
                   <h2 className="discover-card-title">{blog.title}</h2>
                   <p className="discover-card-summary">{blog.summary}</p>
                   <div className="discover-card-meta discover-card-footer">
-                    <span>
-                      {blog.author} · {blog.readTime}
-                    </span>
+                    <span>{blog.readTime}</span>
                     <Link
                       to={`/post/${blog.id}`}
                       className="read-now-btn"

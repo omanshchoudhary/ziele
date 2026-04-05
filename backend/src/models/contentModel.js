@@ -1457,6 +1457,7 @@ export async function getDiscoverData(query = {}, viewerProfileId = null) {
       summary: post.summary,
       author: post.authorName,
       authorHandle: post.authorHandle,
+      time: post.time,
       category: post.tags?.[0] || "Recommended",
       views: formatCompactNumber(post.views || 0),
       readTime: post.readTime,

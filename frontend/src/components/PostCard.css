@@ -96,6 +96,13 @@
     gap: 2px;
 }
 
+.post-author-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
 .post-author-name {
     display: inline-flex;
     align-items: center;
@@ -122,10 +129,21 @@
     white-space: nowrap;
 }
 
+.post-header-actions {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.post-header-top--feed .post-time {
+    margin-left: 0;
+}
+
 .post-follow-btn {
-    padding: 0.4rem 0.8rem;
-    min-height: 34px;
-    font-size: 0.76rem;
+    padding: 0.34rem 0.66rem;
+    min-height: 30px;
+    font-size: 0.72rem;
 }
 
 /* Body */
@@ -243,9 +261,9 @@
 
     cursor: pointer;
     transition:
-        color 0.2s ease,
-        background-color 0.2s ease,
-        transform 0.2s ease;
+        color 0.12s ease,
+        background-color 0.12s ease,
+        transform 0.12s ease;
 }
 
 .action-icon-btn:not(:last-child)::after {
@@ -263,10 +281,14 @@
     background: color-mix(in srgb, var(--text-main) 5%, transparent);
 }
 
+.action-icon-btn[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--text-main) 7%, transparent);
+}
+
 .action-icon-btn svg {
     width: 14px;
     height: 14px;
-    transition: transform 0.2s ease;
+    transition: transform 0.12s ease;
 }
 
 .action-icon-btn:hover svg {
@@ -276,14 +298,26 @@
 .like-btn:hover {
     color: var(--primary);
 }
+.like-btn[aria-pressed="true"] {
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 16%, transparent);
+}
 .dislike-btn:hover {
     color: color-mix(in srgb, var(--text-main) 75%, transparent);
+}
+.dislike-btn[aria-pressed="true"] {
+    color: #f59e0b;
+    background: color-mix(in srgb, #f59e0b 15%, transparent);
 }
 .share-btn:hover {
     color: #06b6d4;
 }
 .bookmark-btn:hover {
     color: #eab308;
+}
+.bookmark-btn[aria-pressed="true"] {
+    color: #eab308;
+    background: color-mix(in srgb, #eab308 18%, transparent);
 }
 .comment-btn:hover {
     color: var(--primary);
@@ -302,5 +336,13 @@
 
     .post-content {
         font-size: 0.9rem;
+    }
+
+    .post-header-actions {
+        margin-left: auto;
+    }
+
+    .post-author-row {
+        flex-wrap: wrap;
     }
 }

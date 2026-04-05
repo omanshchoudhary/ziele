@@ -89,15 +89,22 @@ function delay(ms = 150) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function stripHtml(value = "") {
+  return String(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function normalizePostText(post) {
-  return post.summary || post.contentText || post.content || "";
+  return stripHtml(post.summary || post.contentText || post.content || "");
 }
 
 function adaptPostForFeed(post) {
   return {
     ...post,
     summary: normalizePostText(post),
-    contentText: post.contentText || post.content || "",
+    contentText: stripHtml(post.contentText || post.content || ""),
     profileId: post.profileId || post.authorHandle?.replace("@", "") || null,
     isFollowingAuthor: Boolean(post.isFollowingAuthor),
     isOwnAuthor: Boolean(post.isOwnAuthor),
@@ -305,6 +312,7 @@ export const createPost = withFallback(
       readTime: "1 min read",
       createdAt: new Date().toISOString(),
       viewerReaction: null,
+      isBookmarked: false,
     };
 
     mockPosts.unshift(newPost);
@@ -582,8 +590,34 @@ export const getDiscoverData = withFallback(
     const q = (params.q || "").toLowerCase();
     const tag = (params.tag || "").toLowerCase();
 
-    let blogs = [...mockDiscoverBlogs];
+    const postBlogs = mockPosts.map((post) => ({
+      id: post.id,
+      profileId: post.authorHandle?.replace("@", "") || null,
+      title: post.title,
+      summary: stripHtml(post.content),
+      author: post.authorName,
+      authorHandle: post.authorHandle,
+      time: post.time || "Just now",
+      category: post.tags?.[0] || "General",
+      views:
+        typeof post.views === "number"
+          ? post.views >= 1000
+            ? `${(post.views / 1000).toFixed(1).replace(".0", "")}k`
+            : String(post.views)
+          : "0",
+      readTime: post.readTime || "1 min read",
+    }));
+
+    let blogs = [...mockDiscoverBlogs, ...postBlogs];
     let creators = [...mockDiscoverCreators];
+
+    const seenTitles = new Set();
+    blogs = blogs.filter((item) => {
+      const key = item.title.toLowerCase();
+      if (seenTitles.has(key)) return false;
+      seenTitles.add(key);
+      return true;
+    });
 
     if (q) {
       blogs = blogs.filter(
@@ -604,18 +638,27 @@ export const getDiscoverData = withFallback(
       blogs = blogs.filter((item) => item.category.toLowerCase() === tag);
     }
 
+    const categories = [
+      "Recommended",
+      ...new Set(
+        [...discoverCategories, ...blogs.map((item) => item.category)]
+          .filter(Boolean)
+          .filter((item) => item !== "Recommended"),
+      ),
+    ];
+
     return {
       blogs: blogs.map((item) => ({
         ...item,
-        isFollowing: false,
-        isOwnProfile: false,
+        isFollowingAuthor: false,
+        isOwnAuthor: false,
       })),
       creators: creators.map((item) => ({
         ...item,
         isFollowing: false,
         isOwnProfile: false,
       })),
-      categories: discoverCategories,
+      categories,
     };
   },
 );

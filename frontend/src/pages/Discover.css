@@ -152,6 +152,51 @@
     margin: 0;
 }
 
+.discover-card-author {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.discover-card-author-main {
+    min-width: 0;
+    display: grid;
+    gap: 0.18rem;
+}
+
+.discover-card-author-topline {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.discover-card-author-name {
+    color: var(--text-main);
+    font-size: 0.92rem;
+    font-weight: 720;
+}
+
+.discover-card-author-dot,
+.discover-card-author-time,
+.discover-card-author-handle {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.discover-card-author-handle {
+    display: block;
+}
+
+.discover-card-follow-btn {
+    margin-left: 0.45rem;
+    min-height: 30px;
+    padding: 0.36rem 0.68rem;
+    font-size: 0.74rem;
+}
+
 .discover-card-summary {
     color: var(--text-soft);
     font-size: 0.93rem;
@@ -588,6 +633,10 @@
     .discover-card-summary {
         font-size: 0.87rem;
         min-height: 0;
+    }
+
+    .discover-card-author-topline {
+        align-items: flex-start;
     }
 
     .card-tag {

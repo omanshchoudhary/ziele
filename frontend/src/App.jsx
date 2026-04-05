@@ -59,7 +59,7 @@ function getInitialTheme() {
 
 function App() {
   const location = useLocation();
-  const hideSidebar = ["/discover", "/analytics", "/settings", "/drafts", "/bookmarks", "/trending"].includes(location.pathname);
+  const hideSidebar = ["/discover", "/analytics", "/settings", "/drafts", "/bookmarks", "/trending", "/create"].includes(location.pathname);
 
   const [theme, setTheme] = React.useState(getInitialTheme);
 
