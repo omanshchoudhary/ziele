@@ -144,3 +144,8 @@
   .settings-nav { position: static; flex-direction: row; overflow-x: auto; }
   .settings-content { padding: 1.25rem; }
 }
+
+@media (max-width: 900px) {
+  .settings-header { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+  .settings-save-btn { width: 100%; text-align: center; justify-content: center; display: flex; }
+}

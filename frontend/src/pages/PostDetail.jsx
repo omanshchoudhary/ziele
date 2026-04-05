@@ -173,7 +173,7 @@ function PostDetail() {
         </Link>
       </div>
 
-      <article className="post-card post-detail-main-card">
+      <article className="post-detail-main-card">
         <div className="post-header-top">
           <div className="post-author-avatar">{post.avatar}</div>
           <div className="post-author-info">

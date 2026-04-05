@@ -40,7 +40,6 @@ body {
         100% 100%;
     background-attachment: fixed;
     line-height: 1.5;
-    overflow-x: hidden;
     transition:
         background-color 0.28s ease,
         color 0.28s ease;
