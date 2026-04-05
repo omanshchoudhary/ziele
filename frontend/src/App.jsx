@@ -15,6 +15,9 @@ import Profile from "./pages/Profile";
 import Connections from "./pages/Connections";
 import TrendingPage from "./pages/TrendingPage";
 import Communities from "./pages/Communities";
+import BookmarksPage from "./pages/BookmarksPage";
+import DraftsPage from "./pages/DraftsPage";
+import SettingsPage from "./pages/SettingsPage";
 import GenericPlaceholder from "./pages/GenericPlaceholder";
 import Analytics from "./pages/Analytics";
 import FloatingPanel from "./components/FloatingPanel";
@@ -56,8 +59,7 @@ function getInitialTheme() {
 
 function App() {
   const location = useLocation();
-  const hideSidebar =
-    location.pathname === "/discover" || location.pathname === "/analytics";
+  const hideSidebar = ["/discover", "/analytics", "/settings", "/drafts", "/bookmarks", "/trending"].includes(location.pathname);
 
   const [theme, setTheme] = React.useState(getInitialTheme);
 
@@ -104,12 +106,11 @@ function App() {
             <Route path="/profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/connections" element={<ProtectedRoute><Connections /></ProtectedRoute>} />
 
-            {/* PLACEHOLDER ROUTES */}
+            {/* FULL PAGES */}
             <Route path="/analytics" element={<Analytics />} />
-            <Route path="/drafts" element={<GenericPlaceholder />} />
-
-            <Route path="/bookmarks" element={<GenericPlaceholder />} />
-            <Route path="/settings" element={<GenericPlaceholder />} />
+            <Route path="/bookmarks" element={<BookmarksPage />} />
+            <Route path="/drafts" element={<DraftsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/more" element={<GenericPlaceholder />} />
           </Routes>
         </main>

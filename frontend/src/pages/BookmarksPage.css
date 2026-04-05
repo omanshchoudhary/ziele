@@ -1,0 +1,86 @@
+.bookmarks-page { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+
+.bookmarks-header h1 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.8rem; font-weight: 800; }
+.bookmarks-icon { color: var(--primary); display: inline-flex; }
+.bookmarks-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+/* Controls */
+.bookmarks-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+.bookmarks-search-wrap {
+  flex: 1; min-width: 200px; display: flex; align-items: center; gap: 0.5rem;
+  background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 12px; padding: 0.5rem 0.85rem;
+  color: var(--text-muted); transition: border-color 0.2s;
+}
+.bookmarks-search-wrap:focus-within { border-color: var(--primary); }
+.bookmarks-search {
+  flex: 1; background: none; border: none; outline: none; color: var(--text-main); font-size: 0.88rem;
+}
+.bookmarks-search::placeholder { color: var(--text-muted); }
+
+.bookmarks-sort { display: flex; gap: 0.35rem; }
+.bookmarks-sort-btn {
+  padding: 0.4rem 0.85rem; border-radius: 999px; border: 1px solid var(--glass-border);
+  background: var(--bg-elevated); color: var(--text-soft); font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.bookmarks-sort-btn:hover { color: var(--text-main); border-color: var(--glass-border-strong); }
+.bookmarks-sort-btn.active { background: var(--primary); border-color: var(--primary); color: var(--text-inverse); }
+
+/* List */
+.bookmarks-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.bookmark-card {
+  background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 18px;
+  padding: 1.15rem 1.25rem; display: grid; gap: 0.75rem; transition: all 0.22s ease;
+  animation: bookmarkFadeIn 0.4s ease-out forwards; opacity: 0;
+}
+.bookmark-card:hover { border-color: var(--glass-border-strong); box-shadow: var(--shadow-soft); }
+
+.bookmark-card-top { display: flex; justify-content: space-between; align-items: center; }
+.bookmark-card-author { display: flex; align-items: center; gap: 0.6rem; }
+.bookmark-card-avatar {
+  width: 36px; height: 36px; border-radius: 10px; background: var(--bg-elevated);
+  border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.78rem; color: var(--text-main);
+}
+.bookmark-card-name { font-weight: 620; font-size: 0.9rem; color: var(--text-main); display: block; }
+.bookmark-card-handle { color: var(--text-muted); font-size: 0.78rem; }
+
+.bookmark-card-actions { display: flex; align-items: center; gap: 0.5rem; }
+.bookmark-card-saved { font-size: 0.76rem; color: var(--text-muted); }
+.bookmark-remove-btn {
+  width: 28px; height: 28px; border-radius: 8px; border: 1px solid transparent;
+  background: none; color: var(--text-muted); cursor: pointer; display: flex;
+  align-items: center; justify-content: center; transition: all 0.2s;
+}
+.bookmark-remove-btn:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 25%, transparent); }
+
+.bookmark-card-body { text-decoration: none; display: grid; gap: 0.35rem; }
+.bookmark-card-title { font-weight: 660; font-size: 1.05rem; color: var(--text-main); line-height: 1.3; }
+.bookmark-card-body:hover .bookmark-card-title { color: var(--primary); }
+.bookmark-card-content {
+  color: var(--text-muted); font-size: 0.88rem; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.bookmark-card-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.bookmark-card-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.bookmark-tag {
+  font-size: 0.74rem; font-weight: 600; padding: 0.18rem 0.55rem; border-radius: 6px;
+  background: var(--bg-elevated); border: 1px solid var(--glass-border); color: var(--text-soft);
+}
+.bookmark-card-stats { display: flex; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); }
+
+/* Empty */
+.bookmarks-empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+.bookmarks-empty-icon { font-size: 2.5rem; margin-bottom: 0.7rem; opacity: 0.55; }
+.bookmarks-empty h3 { color: var(--text-main); margin-bottom: 0.35rem; font-size: 1.1rem; }
+.bookmarks-browse-btn {
+  display: inline-block; margin-top: 1rem; padding: 0.55rem 1.5rem; border-radius: 999px;
+  background: var(--primary); color: var(--text-inverse); text-decoration: none; font-weight: 600; font-size: 0.88rem;
+  transition: all 0.2s;
+}
+.bookmarks-browse-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+
+@keyframes bookmarkFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
