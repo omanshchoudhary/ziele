@@ -1,8 +1,8 @@
 import { getNotifications } from '../models/notificationModel.js';
 
-export const getAllNotifications = (req, res) => {
+export const getAllNotifications = async (req, res) => {
   try {
-    const notifications = getNotifications();
+    const notifications = await getNotifications();
     res.json(notifications);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch notifications' });

@@ -1,8 +1,8 @@
 import { deleteCommentById } from '../models/postModel.js';
 
-export const deleteComment = (req, res) => {
+export const deleteComment = async (req, res) => {
   try {
-    const deleted = deleteCommentById(req.params.id);
+    const deleted = await deleteCommentById(req.params.id);
     if (!deleted) {
       return res.status(404).json({ error: 'Comment not found' });
     }

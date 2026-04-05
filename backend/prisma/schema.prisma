@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// 1. USER: The private data we get from Clerk
+// ==========================================
+model User {
+  id        Int      @id @default(autoincrement())
+  clerkId   String   @unique
+  email     String   @unique
+  username  String?
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  
+  // We link this ONE-TO-ONE with the public Profile below
+  profile   Profile?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// 2. PROFILE: The public stats seen by others
+// ==========================================
+model Profile {
+  id          String   @id // Custom ID mapping to their handle without the '@'
+  clerkId     String   @unique
+  
+  // This sets up the relationship back to the User table
+  user        User     @relation(fields: [clerkId], references: [clerkId], onDelete: Cascade)
+
+  name        String
+  handle      String   @unique
+  bio         String   @default("New to Ziele. Excited to start sharing stories.")
+  avatar      String
+  followers   Int      @default(0)
+  following   Int      @default(0)
+  postsCount  Int      @default(0)
+  likes       Int      @default(0)
+  streak      Int      @default(0)
+  isPremium   Boolean  @default(false)
+  joined      String   // Formatted string like "April 2026"
+
+  // One profile can have multiple posts and comments
+  posts       Post[]
+  comments    Comment[]
+}
+
+// ==========================================
+// 3. POST: The actual blog posts
+// ==========================================
+model Post {
+  id           Int      @id @default(autoincrement())
+  
+  // The creator of the post
+  profileId    String
+  author       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // We denormalize these so we don't have to always do expensive JOIN queries
+  authorName   String
+  authorHandle String
+  avatar       String
+  
+  title        String
+  content      String   
+  tags         String[] // PostgreSQL fully supports String Arrays!
+  likes        Int      @default(0)
+  dislikes     Int      @default(0)
+  bookmarks    Int      @default(0)
+  views        Int      @default(1)
+  coverUrl     String   @default("")
+  language     String   @default("English")
+  premium      Boolean  @default(false)
+
+  // One post has many comments
+  comments     Comment[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ==========================================
+// 4. COMMENT: Replies on a post
+// ==========================================
+model Comment {
+  id           Int      @id @default(autoincrement())
+  
+  postId       Int
+  post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  profileId    String?  
+  author       Profile? @relation(fields: [profileId], references: [id])
+  
+  authorName   String
+  authorHandle String
+  avatar       String
+  
+  content      String
+  createdAt    DateTime @default(now())
+}
+
+// ==========================================
+// 5. NOTIFICATION: Live alerts
+// ==========================================
+model Notification {
+  id           Int      @id @default(autoincrement())
+  targetUser   String   // The base handle of the person receiving it
+  type         String   // "like", "comment", "follow"
+  sourceName   String?
+  sourceHandle String?
+  postTitle    String?
+  read         Boolean  @default(false)
+  timestamp    DateTime @default(now())
+}

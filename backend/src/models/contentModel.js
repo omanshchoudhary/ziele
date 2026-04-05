@@ -1,4 +1,4 @@
-import { readStore, withStore } from "../data/store.js";
+import { prisma } from "./prismaClient.js";
 import {
   estimateReadTime,
   formatCompactNumber,
@@ -7,45 +7,43 @@ import {
   stripHtml,
 } from "../utils/contentUtils.js";
 
-function nextId(items) {
-  return (
-    items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1
-  );
-}
-
-function enrichPost(post, state) {
-  const commentCount = state.comments.filter(
-    (comment) => Number(comment.postId) === Number(post.id),
-  ).length;
+// ==============================================================
+// PRISMA HELPER: Enriches DB output to match the expected format
+// ==============================================================
+function enrichPost(post) {
+  if (!post) return null;
+  const contentText = stripHtml(post.content || "");
   return {
     ...post,
-    contentText: stripHtml(post.content),
-    summary: stripHtml(post.content).slice(0, 160).trim(),
+    contentText,
+    summary: contentText.slice(0, 160).trim(),
     time: formatRelativeTime(post.createdAt),
     readTime: estimateReadTime(post.content),
-    comments: commentCount,
+    comments: post._count?.comments || 0,
     viewsLabel: formatCompactNumber(post.views || 0),
   };
 }
 
-function sortPosts(posts) {
-  return [...posts].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+// ==============================================================
+// POSTS
+// ==============================================================
+export async function getPosts() {
+  const posts = await prisma.post.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { comments: true } } },
+  });
+  return posts.map(enrichPost);
 }
 
-export function getPosts() {
-  const state = readStore();
-  return sortPosts(state.posts).map((post) => enrichPost(post, state));
+export async function getPostById(id) {
+  const post = await prisma.post.findUnique({
+    where: { id: Number(id) },
+    include: { _count: { select: { comments: true } } },
+  });
+  return enrichPost(post);
 }
 
-export function getPostById(id) {
-  const state = readStore();
-  const post = state.posts.find((item) => Number(item.id) === Number(id));
-  return post ? enrichPost(post, state) : null;
-}
-
-export function createPost(input) {
+export async function createPost(input) {
   const title = String(input.title || "").trim();
   const content = String(input.content || "").trim();
 
@@ -53,189 +51,173 @@ export function createPost(input) {
     throw new Error("Title and content are required");
   }
 
-  const state = withStore((draft) => {
-    const requestedProfileId = String(input.profileId || "").trim();
-    const authorHandle = normalizeHandle(input.authorHandle || "@currentuser");
+  const requestedProfileId = String(input.profileId || "").trim();
+  const authorHandle = normalizeHandle(input.authorHandle || "@currentuser");
 
-    const profileById = requestedProfileId
-      ? draft.profiles.find((item) => String(item.id) === requestedProfileId)
-      : null;
+  // Link post to User Profile via ID or Handle
+  let profile = await prisma.profile.findFirst({
+    where: {
+      OR: [{ id: requestedProfileId }, { handle: authorHandle }],
+    },
+  });
 
-    const profileByHandle = draft.profiles.find(
-      (item) => normalizeHandle(item.handle) === authorHandle,
-    );
+  // Fallback to first profile if none matched (prevents crashes during dev testing)
+  if (!profile) {
+    profile = await prisma.profile.findFirst();
+  }
 
-    const profile = profileById || profileByHandle || draft.profiles[0];
+  if (!profile) {
+    throw new Error("No profile found. Please sync Clerk user.");
+  }
 
-    const tags = Array.isArray(input.tags)
-      ? input.tags
-          .map((tag) => String(tag).trim())
-          .filter(Boolean)
-          .slice(0, 8)
-      : [];
+  const tags = Array.isArray(input.tags)
+    ? input.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 8)
+    : [];
 
-    const createdPost = {
-      id: nextId(draft.posts),
-      profileId: profile?.id || requestedProfileId || "currentuser",
-      avatar: String(input.avatar || profile?.avatar || "YU"),
-      authorName: String(input.authorName || profile?.name || "You"),
-      authorHandle: String(
-        input.authorHandle || profile?.handle || "@currentuser",
-      ),
+  const post = await prisma.post.create({
+    data: {
+      profileId: profile.id,
+      authorName: String(input.authorName || profile.name),
+      authorHandle: String(input.authorHandle || profile.handle),
+      avatar: String(input.avatar || profile.avatar),
       title,
       content,
-      tags,
-      likes: 0,
-      dislikes: 0,
-      bookmarks: 0,
-      views: 1,
+      tags, // Prisma natively handles string arrays in PostgreSQL!
       coverUrl: String(input.coverUrl || "").trim(),
       language: String(input.language || "English"),
       premium: Boolean(input.premium),
-      createdAt: new Date().toISOString(),
-    };
-
-    draft.posts.push(createdPost);
-    return draft;
+    },
+    include: { _count: { select: { comments: true } } },
   });
 
-  const created = state.posts[state.posts.length - 1];
-  return enrichPost(created, state);
+  return enrichPost(post);
 }
 
-export function getRandomPost() {
-  const posts = getPosts();
-  if (posts.length === 0) return null;
-  const index = Math.floor(Math.random() * posts.length);
-  return posts[index];
+export async function getRandomPost() {
+  const count = await prisma.post.count();
+  if (count === 0) return null;
+  const skip = Math.floor(Math.random() * count);
+  const post = await prisma.post.findFirst({
+    skip,
+    include: { _count: { select: { comments: true } } },
+  });
+  return enrichPost(post);
 }
 
-export function getRelatedPosts(postId) {
-  const posts = getPosts();
-  const current = posts.find((post) => Number(post.id) === Number(postId));
-  if (!current) return [];
+export async function getRelatedPosts(postId) {
+  const current = await prisma.post.findUnique({
+    where: { id: Number(postId) },
+    select: { tags: true },
+  });
 
-  return posts
-    .filter((post) => Number(post.id) !== Number(current.id))
-    .map((post) => ({
-      ...post,
-      score: post.tags.filter((tag) => current.tags.includes(tag)).length,
-    }))
-    .sort((a, b) => b.score - a.score || b.likes - a.likes)
-    .slice(0, 3)
-    .map(({ score, ...post }) => post);
+  if (!current || !current.tags.length) return [];
+
+  // Find posts sharing tags, sorted by popularity
+  const related = await prisma.post.findMany({
+    where: {
+      id: { not: Number(postId) },
+      tags: { hasSome: current.tags }, // Prisma array overlap checking
+    },
+    take: 3,
+    orderBy: { likes: "desc" },
+  });
+
+  return related.map(enrichPost);
 }
 
-export function getCommentsByPostId(postId) {
-  const state = readStore();
-  return state.comments
-    .filter((comment) => Number(comment.postId) === Number(postId))
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .map((comment) => ({
-      ...comment,
-      time: formatRelativeTime(comment.createdAt),
-    }));
+// ==============================================================
+// COMMENTS
+// ==============================================================
+export async function getCommentsByPostId(postId) {
+  const comments = await prisma.comment.findMany({
+    where: { postId: Number(postId) },
+    orderBy: { createdAt: "desc" },
+  });
+  
+  return comments.map((c) => ({
+    ...c,
+    time: formatRelativeTime(c.createdAt),
+  }));
 }
 
-export function createComment(postId, input) {
+export async function createComment(postId, input) {
   const content = String(input.content || "").trim();
-  if (!content) {
-    throw new Error("Comment content is required");
-  }
+  if (!content) throw new Error("Comment content is required");
 
-  const nextState = withStore((draft) => {
-    const post = draft.posts.find((item) => Number(item.id) === Number(postId));
-    if (!post) {
-      throw new Error("Post not found");
-    }
+  // Validate the parent post actually exists in DB
+  const post = await prisma.post.findUnique({ where: { id: Number(postId) } });
+  if (!post) throw new Error("Post not found");
 
-    draft.comments.unshift({
-      id: nextId(draft.comments),
-      postId: Number(postId),
+  const comment = await prisma.comment.create({
+    data: {
+      postId: post.id,
       authorName: String(input.authorName || "You"),
       authorHandle: String(input.authorHandle || "@currentuser"),
       avatar: String(input.avatar || "YU"),
       content,
-      createdAt: new Date().toISOString(),
-    });
-
-    return draft;
+    },
   });
 
-  const created = nextState.comments[0];
   return {
-    ...created,
-    time: formatRelativeTime(created.createdAt),
+    ...comment,
+    time: formatRelativeTime(comment.createdAt),
   };
 }
 
-export function deleteCommentById(commentId) {
-  let deleted = false;
+export async function deleteCommentById(commentId) {
+  try {
+    await prisma.comment.delete({ where: { id: Number(commentId) } });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-  withStore((draft) => {
-    const index = draft.comments.findIndex(
-      (item) => Number(item.id) === Number(commentId),
-    );
-    if (index !== -1) {
-      draft.comments.splice(index, 1);
-      deleted = true;
-    }
-    return draft;
+// ==============================================================
+// MISC STATS / PROFILES
+// ==============================================================
+export async function getNotifications() {
+  return await prisma.notification.findMany({
+    orderBy: { timestamp: "desc" },
   });
-
-  return deleted;
 }
 
-export function getNotifications() {
-  const state = readStore();
-  return state.notifications
-    .map((notification) => ({
-      ...notification,
-      timestamp: notification.timestamp || new Date().toISOString(),
-    }))
-    .sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-    );
+export async function getProfiles() {
+  return await prisma.profile.findMany();
 }
 
-export function getProfiles() {
-  const state = readStore();
-  return state.profiles;
-}
-
-export function getProfileById(profileId) {
-  const state = readStore();
-  const normalized = normalizeHandle(profileId || state.profiles[0]?.id || "");
-  const profile =
-    state.profiles.find((item) => normalizeHandle(item.id) === normalized) ||
-    state.profiles.find(
-      (item) => normalizeHandle(item.handle) === normalized,
-    ) ||
-    null;
+export async function getProfileById(profileId) {
+  const normalized = normalizeHandle(profileId);
+  const profile = await prisma.profile.findFirst({
+    where: {
+      OR: [{ id: profileId }, { handle: normalized }],
+    },
+  });
 
   if (!profile) return null;
 
-  const posts = sortPosts(state.posts)
-    .filter(
-      (post) =>
-        normalizeHandle(post.authorHandle) === normalizeHandle(profile.handle),
-    )
-    .map((post) => enrichPost(post, state));
+  // Fetch the posts written by this profile
+  const posts = await prisma.post.findMany({
+    where: { profileId: profile.id },
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { comments: true } } },
+  });
 
   return {
     ...profile,
-    posts,
+    posts: posts.map(enrichPost),
   };
 }
 
-export function getSidebarData() {
-  const posts = getPosts();
-  const tagCounts = new Map();
+// ==============================================================
+// AGGREGATION / DISCOVER
+// ==============================================================
+export async function getSidebarData() {
+  const posts = await prisma.post.findMany({
+    select: { tags: true, views: true },
+  });
 
+  const tagCounts = new Map();
   posts.forEach((post) => {
     post.tags.forEach((tag) => {
       const current = tagCounts.get(tag) || 0;
@@ -252,42 +234,34 @@ export function getSidebarData() {
       tag: `#${topic.replace(/\s+/g, "")}`,
     }));
 
-  const suggestions = getProfiles()
-    .slice(0, 4)
-    .map((profile) => ({
-      name: profile.name,
-      handle: profile.handle,
-      avatar: profile.avatar,
-    }));
+  const profiles = await prisma.profile.findMany({ take: 4 });
+  const suggestions = profiles.map((p) => ({
+    name: p.name,
+    handle: p.handle,
+    avatar: p.avatar,
+  }));
 
-  return {
-    trendingTopics,
-    suggestions,
-  };
+  return { trendingTopics, suggestions };
 }
 
-export function getDiscoverData(query = {}) {
-  const posts = getPosts();
-  const categories = [
-    "Recommended",
-    ...new Set(posts.flatMap((post) => post.tags)),
-  ];
-  const creators = getProfiles()
-    .slice(0, 4)
-    .map((profile) => ({
-      id: profile.id,
-      initials: profile.avatar,
-      name: profile.name,
-      handle: profile.handle,
-      note: profile.bio,
-      followers: formatCompactNumber(profile.followers),
-      posts: String(profile.posts),
-    }));
+export async function getDiscoverData(query = {}) {
+  const posts = await getPosts();
+
+  const categories = ["Recommended", ...new Set(posts.flatMap((post) => post.tags))];
+
+  const dbProfiles = await prisma.profile.findMany({ take: 4 });
+  const creators = dbProfiles.map((p) => ({
+    id: p.id,
+    initials: p.avatar,
+    name: p.name,
+    handle: p.handle,
+    note: p.bio,
+    followers: formatCompactNumber(p.followers),
+    posts: String(p.postsCount),
+  }));
 
   const tagQuery = normalizeHandle(query.tag || "");
-  const search = String(query.q || "")
-    .trim()
-    .toLowerCase();
+  const search = String(query.q || "").trim().toLowerCase();
 
   const blogs = posts
     .map((post) => ({
@@ -307,14 +281,9 @@ export function getDiscoverData(query = {}) {
         blog.author.toLowerCase().includes(search) ||
         blog.category.toLowerCase().includes(search);
 
-      const matchesTag =
-        !tagQuery || normalizeHandle(blog.category) === tagQuery;
+      const matchesTag = !tagQuery || normalizeHandle(blog.category) === tagQuery;
       return matchesSearch && matchesTag;
     });
 
-  return {
-    categories,
-    blogs,
-    creators,
-  };
+  return { categories, blogs, creators };
 }

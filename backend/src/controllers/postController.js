@@ -9,10 +9,10 @@ import {
 } from "../models/postModel.js";
 import { getProfileForClerkUser } from "../models/clerkSyncModel.js";
 
-function resolveAuthProfile(req) {
+async function resolveAuthProfile(req) {
   const clerkUserId = req?.authContext?.userId || null;
   if (!clerkUserId) return null;
-  return getProfileForClerkUser(clerkUserId);
+  return await getProfileForClerkUser(clerkUserId);
 }
 
 function applyAuthenticatedAuthor(input = {}, profile = null) {
@@ -27,19 +27,19 @@ function applyAuthenticatedAuthor(input = {}, profile = null) {
   };
 }
 
-export const getAllPosts = (req, res) => {
+export const getAllPosts = async (req, res) => {
   try {
-    const posts = getPosts();
+    const posts = await getPosts();
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch posts" });
   }
 };
 
-export const getPostById = (req, res) => {
+export const getPostById = async (req, res) => {
   try {
     const { id } = req.params;
-    const post = getPostByIdModel(id);
+    const post = await getPostByIdModel(id);
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
@@ -49,21 +49,21 @@ export const getPostById = (req, res) => {
   }
 };
 
-export const createPostItem = (req, res) => {
+export const createPostItem = async (req, res) => {
   try {
-    const authProfile = resolveAuthProfile(req);
+    const authProfile = await resolveAuthProfile(req);
     const payload = applyAuthenticatedAuthor(req.body || {}, authProfile);
 
-    const post = createPost(payload);
+    const post = await createPost(payload);
     res.status(201).json(post);
   } catch (error) {
     res.status(400).json({ error: error.message || "Failed to create post" });
   }
 };
 
-export const getRandomPostItem = (req, res) => {
+export const getRandomPostItem = async (req, res) => {
   try {
-    const post = getRandomPost();
+    const post = await getRandomPost();
     if (!post) {
       return res.status(404).json({ error: "No posts available" });
     }
@@ -73,21 +73,21 @@ export const getRandomPostItem = (req, res) => {
   }
 };
 
-export const getPostComments = (req, res) => {
+export const getPostComments = async (req, res) => {
   try {
-    const comments = getCommentsByPostId(req.params.id);
+    const comments = await getCommentsByPostId(req.params.id);
     res.json(comments);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch comments" });
   }
 };
 
-export const createPostComment = (req, res) => {
+export const createPostComment = async (req, res) => {
   try {
-    const authProfile = resolveAuthProfile(req);
+    const authProfile = await resolveAuthProfile(req);
     const payload = applyAuthenticatedAuthor(req.body || {}, authProfile);
 
-    const comment = createComment(req.params.id, payload);
+    const comment = await createComment(req.params.id, payload);
     res.status(201).json(comment);
   } catch (error) {
     const status = error.message === "Post not found" ? 404 : 400;
@@ -97,9 +97,9 @@ export const createPostComment = (req, res) => {
   }
 };
 
-export const getRelatedPostItems = (req, res) => {
+export const getRelatedPostItems = async (req, res) => {
   try {
-    const relatedPosts = getRelatedPosts(req.params.id);
+    const relatedPosts = await getRelatedPosts(req.params.id);
     res.json(relatedPosts);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch related posts" });

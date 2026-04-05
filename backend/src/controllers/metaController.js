@@ -1,16 +1,16 @@
 import { getDiscoverData, getSidebarData } from '../models/metaModel.js';
 
-export const getSidebar = (req, res) => {
+export const getSidebar = async (req, res) => {
   try {
-    res.json(getSidebarData());
+    res.json(await getSidebarData());
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch sidebar data' });
   }
 };
 
-export const getDiscover = (req, res) => {
+export const getDiscover = async (req, res) => {
   try {
-    res.json(getDiscoverData(req.query || {}));
+    res.json(await getDiscoverData(req.query || {}));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch discover data' });
   }
