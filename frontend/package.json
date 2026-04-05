@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node tests/run-tests.js"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.4",
@@ -19,6 +23,14 @@
     "vite": "^7.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.0"
+    "@eslint/js": "^9.35.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "eslint": "^9.35.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.43.0"
   }
 }

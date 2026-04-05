@@ -54,7 +54,7 @@ Backend endpoint added:
 
 Purpose:
 
-- sync Clerk users into local backend data store (`appData.json`)
+- sync Clerk users into the local PostgreSQL/Prisma data model
 - keep local profiles aligned with Clerk account lifecycle
 
 Supported events:
@@ -134,7 +134,7 @@ A Clerk sync model is included to:
 - update local user/profile metadata on `user.updated`
 - remove local user/profile on `user.deleted`
 
-The local JSON store now includes a `users` array.
+The Prisma data model stores synced users and profiles so authenticated API calls can resolve local records.
 
 ---
 

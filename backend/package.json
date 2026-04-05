@@ -5,18 +5,41 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "prisma generate && node -e \"import('./src/app.js')\"",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node tests/run-tests.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.6.0",
     "@clerk/express": "^2.0.8",
     "@prisma/client": "^7.6.0",
+    "@google/generative-ai": "^0.24.1",
+    "@trpc/server": "^11.5.1",
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
     "express": "^4.18.2",
+    "pg": "^8.16.3",
+    "redis": "^5.8.2",
+    "resend": "^4.6.0",
     "svix": "^1.90.0"
+    ,
+    "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "eslint": "^9.35.0",
+    "globals": "^16.4.0",
     "nodemon": "^3.1.14",
+    "prettier": "^3.6.2",
     "prisma": "^7.6.0"
   }
 }

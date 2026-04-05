@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 // IMPORT: Clerk SDK to wrap our application with authentication context
-import { ClerkProvider, useAuth } from '@clerk/clerk-react';
+import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App';
-import { setAuthTokenGetter } from './lib/api';
+import ClerkTokenBridge from './components/ClerkTokenBridge';
 import './index.css';
 
 // AUTH CONFIG: Retrieve the Clerk publishable key from Vite's environment variables.
@@ -18,26 +18,6 @@ if (!PUBLISHABLE_KEY) {
 }
 
 const safeKey = PUBLISHABLE_KEY || 'pk_test_ZHVtbXkta2V5LmNsZXJrLmFjY291bnRzLmRldiQ';
-
-function ClerkTokenBridge() {
-  const { getToken } = useAuth();
-
-  React.useEffect(() => {
-    setAuthTokenGetter(async () => {
-      try {
-        return await getToken();
-      } catch {
-        return null;
-      }
-    });
-
-    return () => {
-      setAuthTokenGetter(null);
-    };
-  }, [getToken]);
-
-  return null;
-}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

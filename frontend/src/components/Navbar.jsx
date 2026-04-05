@@ -13,11 +13,20 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
     const params = new URLSearchParams(location.search);
     const queryFromUrl = params.get("q") || "";
 
-    if (location.pathname === "/discover" || location.pathname === "/communities") {
-      setSearchQuery(queryFromUrl);
-    } else if (queryFromUrl && searchQuery !== queryFromUrl) {
-      setSearchQuery(queryFromUrl);
-    }
+    setSearchQuery((currentQuery) => {
+      if (
+        location.pathname === "/discover" ||
+        location.pathname === "/communities"
+      ) {
+        return queryFromUrl;
+      }
+
+      if (queryFromUrl && currentQuery !== queryFromUrl) {
+        return queryFromUrl;
+      }
+
+      return currentQuery;
+    });
   }, [location.pathname, location.search]);
 
   const handleSearchSubmit = (event) => {

@@ -9,7 +9,7 @@ function FloatingPanel() {
   const location = useLocation();
   const panelRef = useRef(null);
 
-  const handleMagicPost = async () => {
+  const handleMagicPost = React.useCallback(async () => {
     try {
       const randomPost = await getRandomPost();
       if (!randomPost) {
@@ -20,7 +20,7 @@ function FloatingPanel() {
     } catch {
       navigate("/");
     }
-  };
+  }, [navigate]);
 
   const menuItems = useMemo(
     () => [
@@ -225,7 +225,7 @@ function FloatingPanel() {
         ),
       },
     ],
-    [],
+    [handleMagicPost],
   );
 
   const isItemActive = (item) => {

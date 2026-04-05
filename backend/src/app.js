@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
 
+import { env } from "./config/env.js";
 import { clerkAuthMiddleware } from "./middleware/authMiddleware.js";
 
 import healthRoutes from "./routes/healthRoutes.js";
@@ -11,10 +13,19 @@ import profileRoutes from "./routes/profileRoutes.js";
 import metaRoutes from "./routes/metaRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
+import { createTrpcContext } from "./trpc/context.js";
+import { appRouter } from "./trpc/routers/_app.js";
 
 const app = express();
 
-app.use(cors());
+// We keep CORS permissive in early setup, but prefer explicit origins once env values are added.
+app.use(
+  cors({
+    origin:
+      env.corsOrigins.length > 0 ? env.corsOrigins : true,
+    credentials: true,
+  }),
+);
 
 // Keep webhook route before auth/body middleware to preserve the raw body for verification.
 app.use("/api/webhooks/clerk", webhookRoutes);
@@ -33,5 +44,14 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/meta", metaRoutes);
+
+// tRPC lives alongside the existing REST routes so we can migrate incrementally.
+app.use(
+  "/trpc",
+  createExpressMiddleware({
+    router: appRouter,
+    createContext: createTrpcContext,
+  }),
+);
 
 export default app;

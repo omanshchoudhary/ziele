@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./Notifications.css";
 import { getNotifications as getNotificationsApi } from "../lib/api";
 
@@ -139,7 +139,7 @@ function Notifications() {
     read: Boolean(notif?.read),
   });
 
-  const loadNotifications = async ({ silent = false } = {}) => {
+  const loadNotifications = useCallback(async ({ silent = false } = {}) => {
     if (silent) setIsRefreshing(true);
     else setIsLoading(true);
 
@@ -159,11 +159,11 @@ function Notifications() {
       if (silent) setIsRefreshing(false);
       else setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [loadNotifications]);
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));

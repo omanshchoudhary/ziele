@@ -58,7 +58,7 @@ function Profile() {
         <div className="page profile-stack">
           <h1 className="profile-page-title-inline">Profile not found</h1>
           <p className="profile-muted-text">
-            The profile you’re looking for doesn’t exist.
+            {error || "The profile you’re looking for doesn’t exist."}
           </p>
           <div>
             <Link to="/" className="back-btn">
