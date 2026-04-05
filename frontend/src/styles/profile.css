@@ -206,6 +206,10 @@
     transform: translateY(-3px);
 }
 
+.elite-stat-link {
+    text-decoration: none;
+}
+
 .elite-stat .stat-value {
     font-size: 1.18rem;
     font-weight: 800;

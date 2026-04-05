@@ -51,6 +51,8 @@ model Profile {
   // One profile can have multiple posts and comments
   posts       Post[]
   comments    Comment[]
+  followerLinks Follow[] @relation("ProfileFollowers")
+  followingLinks Follow[] @relation("ProfileFollowing")
 }
 
 // ==========================================
@@ -76,6 +78,9 @@ model Post {
   bookmarks    Int      @default(0)
   views        Int      @default(1)
   coverUrl     String   @default("")
+  mediaUrl     String   @default("")
+  mediaType    String   @default("")
+  mediaSource  String   @default("")
   language     String   @default("English")
   premium      Boolean  @default(false)
 
@@ -118,4 +123,15 @@ model Notification {
   postTitle    String?
   read         Boolean  @default(false)
   timestamp    DateTime @default(now())
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    Profile @relation("ProfileFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   Profile @relation("ProfileFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
 }

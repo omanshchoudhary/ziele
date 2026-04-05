@@ -21,6 +21,27 @@
     gap: 1rem;
 }
 
+.create-post-media-grid {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.create-post-upload-label {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--text-main);
+}
+
+.create-post-url-row {
+    display: grid;
+    gap: 0.75rem;
+    align-items: start;
+}
+
+.create-post-secondary-btn {
+    width: auto !important;
+}
+
 .create-post-options-row {
     display: flex;
     gap: 1rem;

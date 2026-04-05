@@ -107,30 +107,6 @@
     white-space: nowrap;
 }
 
-.post-author-name::after {
-    content: "Follow";
-    font-size: 0.64rem;
-    font-weight: 650;
-    line-height: 1;
-
-    color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
-    padding: 2px 6px;
-    border-radius: 999px;
-
-    transition:
-        background-color 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease;
-}
-
-.post-author-name:hover::after {
-    color: var(--text-inverse);
-    background: color-mix(in srgb, var(--primary) 72%, transparent);
-    border-color: color-mix(in srgb, var(--primary) 86%, transparent);
-}
-
 .post-author-handle {
     color: var(--text-muted);
     font-size: 0.82rem;
@@ -144,6 +120,12 @@
     color: var(--text-muted);
     font-size: 0.78rem;
     white-space: nowrap;
+}
+
+.post-follow-btn {
+    padding: 0.4rem 0.8rem;
+    min-height: 34px;
+    font-size: 0.76rem;
 }
 
 /* Body */
@@ -186,6 +168,22 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.42rem;
+}
+
+.post-media-shell {
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-elevated);
+}
+
+.media-attachment-image,
+.media-attachment-video {
+    width: 100%;
+    display: block;
+    max-height: 420px;
+    object-fit: cover;
+    background: #000;
 }
 
 .post-tag-pill {

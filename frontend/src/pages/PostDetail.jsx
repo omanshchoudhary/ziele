@@ -4,6 +4,8 @@ import {
   getPostById,
   getRelatedPosts,
 } from "../lib/api";
+import FollowButton from "../components/FollowButton";
+import MediaAttachment from "../components/MediaAttachment";
 import { formatCompactNumber } from "../lib/formatters";
 import CommentSection from "../components/CommentSection";
 import "../components/PostCard.css";
@@ -178,6 +180,13 @@ function PostDetail() {
             <span className="post-author-name">{post.authorName}</span>
             <span className="post-author-handle">{post.authorHandle}</span>
           </div>
+          <FollowButton
+            profileId={post.profileId}
+            profileName={post.authorName}
+            initialIsFollowing={post.isFollowingAuthor}
+            isOwnProfile={post.isOwnAuthor}
+            className="follow-btn post-follow-btn"
+          />
           <span className="post-time">{post.time}</span>
         </div>
 
@@ -197,6 +206,13 @@ function PostDetail() {
               </span>
             ))}
           </div>
+
+          <MediaAttachment
+            mediaUrl={post.mediaUrl}
+            mediaType={post.mediaType}
+            alt={post.title}
+            className="post-media-shell post-detail-media-shell"
+          />
 
           <div
             className="post-detail-paragraphs"

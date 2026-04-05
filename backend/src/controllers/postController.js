@@ -8,6 +8,12 @@ import {
   getRelatedPosts,
 } from "../models/postModel.js";
 import { getProfileForClerkUser } from "../models/clerkSyncModel.js";
+import { cloudinary } from "../integrations/cloudinaryClient.js";
+import { getServiceReadinessSnapshot } from "../config/env.js";
+import {
+  assertUploadMimeType,
+  validateExternalMediaUrl,
+} from "../utils/mediaUtils.js";
 
 async function resolveAuthProfile(req) {
   const clerkUserId = req?.authContext?.userId || null;
@@ -29,7 +35,8 @@ function applyAuthenticatedAuthor(input = {}, profile = null) {
 
 export const getAllPosts = async (req, res) => {
   try {
-    const posts = await getPosts();
+    const authProfile = await resolveAuthProfile(req);
+    const posts = await getPosts(authProfile?.id || null);
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch posts" });
@@ -39,7 +46,8 @@ export const getAllPosts = async (req, res) => {
 export const getPostById = async (req, res) => {
   try {
     const { id } = req.params;
-    const post = await getPostByIdModel(id);
+    const authProfile = await resolveAuthProfile(req);
+    const post = await getPostByIdModel(id, authProfile?.id || null);
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
@@ -63,7 +71,8 @@ export const createPostItem = async (req, res) => {
 
 export const getRandomPostItem = async (req, res) => {
   try {
-    const post = await getRandomPost();
+    const authProfile = await resolveAuthProfile(req);
+    const post = await getRandomPost(authProfile?.id || null);
     if (!post) {
       return res.status(404).json({ error: "No posts available" });
     }
@@ -99,9 +108,77 @@ export const createPostComment = async (req, res) => {
 
 export const getRelatedPostItems = async (req, res) => {
   try {
-    const relatedPosts = await getRelatedPosts(req.params.id);
+    const authProfile = await resolveAuthProfile(req);
+    const relatedPosts = await getRelatedPosts(
+      req.params.id,
+      authProfile?.id || null,
+    );
     res.json(relatedPosts);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch related posts" });
+  }
+};
+
+export const validatePostMediaUrlItem = async (req, res) => {
+  try {
+    const { mediaUrl, mediaType } = req.body || {};
+    const validated = validateExternalMediaUrl(mediaUrl, mediaType);
+
+    return res.json({
+      url: validated.url,
+      mediaType: validated.mediaType,
+      mediaSource: "url",
+    });
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ error: error.message || "Invalid media URL provided." });
+  }
+};
+
+export const uploadPostMediaItem = async (req, res) => {
+  try {
+    if (!getServiceReadinessSnapshot().cloudinary.configured) {
+      return res.status(503).json({
+        error: "Cloudinary is not configured yet.",
+      });
+    }
+
+    if (!req.file?.buffer) {
+      return res.status(400).json({ error: "Please attach an image or video file." });
+    }
+
+    const mediaType = assertUploadMimeType(req.file.mimetype);
+
+    const uploaded = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "ziele/posts",
+          resource_type: mediaType,
+        },
+        (uploadError, result) => {
+          if (uploadError) {
+            reject(uploadError);
+            return;
+          }
+
+          resolve(result);
+        },
+      );
+
+      // Cloudinary accepts streams, so we avoid writing temp files to disk.
+      stream.end(req.file.buffer);
+    });
+
+    return res.status(201).json({
+      url: uploaded.secure_url,
+      mediaType: uploaded.resource_type === "video" ? "video" : "image",
+      mediaSource: "upload",
+      publicId: uploaded.public_id,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      error: error.message || "Failed to upload media.",
+    });
   }
 };

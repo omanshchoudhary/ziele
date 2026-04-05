@@ -1,0 +1,140 @@
+.connections-page {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.connections-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.connections-subtitle {
+  margin: 0;
+  max-width: 620px;
+}
+
+.connections-summary {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: var(--bg-card-2, var(--bg-card));
+}
+
+.connections-owner {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.connections-owner-avatar,
+.connections-card-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: var(--bg-elevated);
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 800;
+  border: 1px solid var(--glass-border);
+}
+
+.connections-owner-name,
+.connections-card-name {
+  color: var(--text-main);
+  font-weight: 700;
+  margin: 0;
+  text-decoration: none;
+}
+
+.connections-owner-handle,
+.connections-card-handle,
+.connections-card-meta {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.connections-counts {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.connections-tab {
+  border: 1px solid var(--glass-border);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.connections-tab.active {
+  color: var(--text-main);
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.connections-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.connections-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: var(--bg-card-2, var(--bg-card));
+}
+
+.connections-card-body {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.connections-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.connections-card-bio {
+  margin: 0;
+}
+
+.connections-card-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.connections-empty {
+  padding: 1.2rem;
+  border-radius: 18px;
+  border: 1px dashed var(--glass-border);
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .connections-card {
+    grid-template-columns: 1fr;
+  }
+
+  .connections-card-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}

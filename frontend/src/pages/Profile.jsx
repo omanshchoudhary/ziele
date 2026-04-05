@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import "../styles/profile.css";
 import "../components/PostCard.css";
 import { getCurrentProfile, getProfile } from "../lib/api";
+import FollowButton from "../components/FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 
 const tabs = ["Stories", "Drafts", "Bookmarks", "About"];
@@ -14,7 +15,6 @@ function Profile() {
   const [error, setError] = useState("");
 
   const [activeTab, setActiveTab] = useState("Stories");
-  const [followed, setFollowed] = useState(false);
   const profilePosts = useMemo(() => profile?.posts || [], [profile]);
 
   React.useEffect(() => {
@@ -109,14 +109,21 @@ function Profile() {
             <article key={post.id} className="post-card">
               <div className="post-header-top">
                 <div className="post-author-avatar">{post.avatar}</div>
-                <div className="post-author-info">
-                  <span className="post-author-name">{post.authorName}</span>
-                  <span className="post-author-handle">
-                    {post.authorHandle}
-                  </span>
-                </div>
-                <span className="post-time">{post.time}</span>
+              <div className="post-author-info">
+                <span className="post-author-name">{post.authorName}</span>
+                <span className="post-author-handle">
+                  {post.authorHandle}
+                </span>
               </div>
+              <FollowButton
+                profileId={post.profileId}
+                profileName={post.authorName}
+                initialIsFollowing={post.isFollowingAuthor}
+                isOwnProfile={post.isOwnAuthor}
+                className="follow-btn post-follow-btn"
+              />
+              <span className="post-time">{post.time}</span>
+            </div>
 
               <div className="post-body-mid">
                 <h2 className="post-title">{post.title}</h2>
@@ -257,13 +264,18 @@ function Profile() {
           </div>
 
           <div className="profile-cta-group">
-            <button
+            <FollowButton
+              profileId={profile.id}
+              profileName={profile.name}
+              initialIsFollowing={profile.isFollowing}
+              isOwnProfile={profile.isOwnProfile}
               className="nav-btn-primary"
-              type="button"
-              onClick={() => setFollowed((prev) => !prev)}
-            >
-              {followed ? "Following" : "Follow"}
-            </button>
+              onChange={(response) => {
+                if (response?.profile) {
+                  setProfile(response.profile);
+                }
+              }}
+            />
 
             <button
               className="action-icon-btn profile-share-btn"
@@ -298,22 +310,28 @@ function Profile() {
         <div className="profile-stats-elite">
           <div className="elite-stat">
             <span className="stat-value">
-              {formatCompactNumber(profile.posts)}
+              {formatCompactNumber(profile.postsTotal || profile.postsCount || 0)}
             </span>
             <span className="stat-label">Stories</span>
           </div>
-          <div className="elite-stat">
+          <Link
+            to={`/connections?profile=${encodeURIComponent(profile.id)}&tab=followers`}
+            className="elite-stat elite-stat-link"
+          >
             <span className="stat-value">
               {formatCompactNumber(profile.followers)}
             </span>
             <span className="stat-label">Followers</span>
-          </div>
-          <div className="elite-stat">
+          </Link>
+          <Link
+            to={`/connections?profile=${encodeURIComponent(profile.id)}&tab=following`}
+            className="elite-stat elite-stat-link"
+          >
             <span className="stat-value">
               {formatCompactNumber(profile.following)}
             </span>
             <span className="stat-label">Following</span>
-          </div>
+          </Link>
           <div className="elite-stat">
             <span className="stat-value">
               {formatCompactNumber(profile.likes)}

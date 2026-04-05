@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getPosts } from "../lib/api";
+import FollowButton from "../components/FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 import "../components/PostCard.css";
 
@@ -160,6 +161,13 @@ function Home() {
                 <span className="post-author-name">{post.authorName}</span>
                 <span className="post-author-handle">{post.authorHandle}</span>
               </div>
+              <FollowButton
+                profileId={post.profileId}
+                profileName={post.authorName}
+                initialIsFollowing={post.isFollowingAuthor}
+                isOwnProfile={post.isOwnAuthor}
+                className="follow-btn post-follow-btn"
+              />
               <span className="post-time">{post.time}</span>
             </div>
 

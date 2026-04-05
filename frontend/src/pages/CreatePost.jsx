@@ -1,8 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { createPost } from "../lib/api";
+import {
+  createPost,
+  uploadPostMedia,
+  validatePostMediaUrl,
+} from "../lib/api";
+import MediaAttachment from "../components/MediaAttachment";
 import "../components/PostCard.css";
 import "./CreatePost.css";
 
@@ -10,7 +15,10 @@ const INITIAL_STATE = {
   title: "",
   content: "",
   tagsInput: "",
-  coverUrl: "",
+  mediaInput: "",
+  mediaUrl: "",
+  mediaType: "",
+  mediaSource: "",
   language: "English",
   publishAsPremium: false,
 };
@@ -49,14 +57,15 @@ const quillModules = {
 function CreatePost() {
   const [form, setForm] = useState(INITIAL_STATE);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [isValidatingUrl, setIsValidatingUrl] = useState(false);
   const [publishedPost, setPublishedPost] = useState(null);
   const [error, setError] = useState("");
+  const [mediaMessage, setMediaMessage] = useState("");
+  const fileInputRef = useRef(null);
 
   const tags = useMemo(() => parseTags(form.tagsInput), [form.tagsInput]);
-  const readTime = useMemo(
-    () => estimateReadTime(form.content),
-    [form.content],
-  );
+  const readTime = useMemo(() => estimateReadTime(form.content), [form.content]);
 
   const onChange = (key) => (event) => {
     const value =
@@ -66,13 +75,77 @@ function CreatePost() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const applyMediaSelection = (media) => {
+    setForm((prev) => ({
+      ...prev,
+      mediaUrl: media.url,
+      mediaType: media.mediaType,
+      mediaSource: media.mediaSource,
+      mediaInput: media.url,
+    }));
+  };
+
+  const clearMedia = () => {
+    setForm((prev) => ({
+      ...prev,
+      mediaInput: "",
+      mediaUrl: "",
+      mediaType: "",
+      mediaSource: "",
+    }));
+    setMediaMessage("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleValidateMediaUrl = async (rawValue = form.mediaInput) => {
+    const mediaInput = String(rawValue || "").trim();
+
+    if (!mediaInput) {
+      clearMedia();
+      return null;
+    }
+
+    setIsValidatingUrl(true);
+    setError("");
+
+    try {
+      const media = await validatePostMediaUrl({ mediaUrl: mediaInput });
+      applyMediaSelection(media);
+      setMediaMessage(`Validated ${media.mediaType} URL.`);
+      return media;
+    } catch (validationError) {
+      setMediaMessage("");
+      throw validationError;
+    } finally {
+      setIsValidatingUrl(false);
+    }
+  };
+
+  const handleFileChange = async (event) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+
+    setIsUploadingMedia(true);
+    setError("");
+
+    try {
+      const media = await uploadPostMedia(selectedFile);
+      applyMediaSelection(media);
+      setMediaMessage(`Uploaded ${media.mediaType} to Cloudinary.`);
+    } catch (uploadError) {
+      setMediaMessage("");
+      setError(uploadError.message || "Unable to upload media.");
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
 
-    if (
-      !form.title.trim() ||
-      !form.content.replace(/<[^>]*>/g, " ").trim()
-    ) {
+    if (!form.title.trim() || !form.content.replace(/<[^>]*>/g, " ").trim()) {
       window.alert("Please add both title and content before publishing.");
       return;
     }
@@ -81,19 +154,42 @@ function CreatePost() {
     setError("");
 
     try {
+      let mediaPayload = null;
+      const pendingMediaUrl = form.mediaInput.trim();
+
+      // We validate pasted URLs here as a final guard so the saved post only stores vetted media.
+      if (pendingMediaUrl) {
+        const needsValidation =
+          form.mediaSource !== "upload" || form.mediaUrl !== pendingMediaUrl;
+
+        mediaPayload = needsValidation
+          ? await handleValidateMediaUrl(pendingMediaUrl)
+          : {
+              url: form.mediaUrl,
+              mediaType: form.mediaType,
+              mediaSource: form.mediaSource,
+            };
+      }
+
       const newPost = await createPost({
         title: form.title.trim(),
         content: form.content.trim(),
         tags,
-        coverUrl: form.coverUrl.trim(),
+        mediaUrl: mediaPayload?.url || "",
+        mediaType: mediaPayload?.mediaType || "",
+        mediaSource: mediaPayload?.mediaSource || "",
         language: form.language,
         premium: form.publishAsPremium,
       });
 
       setPublishedPost(newPost);
       setForm(INITIAL_STATE);
-    } catch (err) {
-      setError(err.message || "Unable to publish your post.");
+      setMediaMessage("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (publishError) {
+      setError(publishError.message || "Unable to publish your post.");
     } finally {
       setIsPublishing(false);
     }
@@ -104,7 +200,7 @@ function CreatePost() {
       <header className="create-post-header">
         <h1 className="create-post-title">Create New Post</h1>
         <Link to="/" className="back-btn">
-          ← Back to Home
+          â† Back to Home
         </Link>
       </header>
 
@@ -133,12 +229,45 @@ function CreatePost() {
           onChange={onChange("tagsInput")}
         />
 
-        <input
-          type="url"
-          placeholder="Cover image URL (optional)"
-          value={form.coverUrl}
-          onChange={onChange("coverUrl")}
-        />
+        <div className="create-post-media-grid">
+          <label className="create-post-upload-label">
+            <span className="create-post-label-text">Upload image or video</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+            />
+          </label>
+
+          <div className="create-post-url-row">
+            <input
+              type="url"
+              placeholder="Paste a direct image/video URL"
+              value={form.mediaInput}
+              onChange={onChange("mediaInput")}
+            />
+            <button
+              type="button"
+              className="create-post-secondary-btn"
+              onClick={() => handleValidateMediaUrl().catch((validationError) => {
+                setError(validationError.message || "Invalid media URL.");
+              })}
+              disabled={isValidatingUrl}
+            >
+              {isValidatingUrl ? "Checking..." : "Validate URL"}
+            </button>
+            {(form.mediaUrl || form.mediaInput) && (
+              <button
+                type="button"
+                className="create-post-secondary-btn"
+                onClick={clearMedia}
+              >
+                Clear media
+              </button>
+            )}
+          </div>
+        </div>
 
         <div className="create-post-options-row">
           <label className="create-post-select-label">
@@ -168,6 +297,11 @@ function CreatePost() {
         <div className="create-post-meta-row">
           <span>{form.title.length}/120 characters</span>
           <span>{readTime}</span>
+          <span>
+            {isUploadingMedia
+              ? "Uploading media..."
+              : mediaMessage || "No media attached"}
+          </span>
         </div>
 
         {tags.length > 0 && (
@@ -182,7 +316,7 @@ function CreatePost() {
 
         {error ? <p>{error}</p> : null}
 
-        <button type="submit" disabled={isPublishing}>
+        <button type="submit" disabled={isPublishing || isUploadingMedia}>
           {isPublishing ? "Publishing..." : "Publish"}
         </button>
       </form>
@@ -194,6 +328,14 @@ function CreatePost() {
             <h3 className="post-title">
               {form.title.trim() || "Your title will appear here"}
             </h3>
+
+            <MediaAttachment
+              mediaUrl={form.mediaUrl}
+              mediaType={form.mediaType}
+              alt={form.title.trim() || "Media preview"}
+              className="post-media-shell"
+            />
+
             <div
               className="post-content"
               dangerouslySetInnerHTML={{

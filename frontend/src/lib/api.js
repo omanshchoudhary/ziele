@@ -9,8 +9,9 @@ export function setAuthTokenGetter(getter) {
 
 async function buildHeaders(options = {}) {
   const headers = new Headers(options.headers || {});
+  const isFormDataBody = options.body instanceof FormData;
 
-  if (options.body != null && !headers.has("Content-Type")) {
+  if (options.body != null && !isFormDataBody && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -103,6 +104,27 @@ export function createPost(payload) {
   });
 }
 
+export async function uploadPostMedia(file) {
+  const headers = await buildHeaders({ method: "POST", body: new FormData() });
+  const formData = new FormData();
+  formData.append("media", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/posts/media/upload`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  return parseResponse(response);
+}
+
+export function validatePostMediaUrl(payload) {
+  return fetchJson("/api/posts/media/validate", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getNotifications() {
   return fetchJson("/api/notifications");
 }
@@ -113,6 +135,18 @@ export function getProfile(id) {
 
 export function getCurrentProfile() {
   return fetchJson("/api/profiles/current");
+}
+
+export function followProfile(id) {
+  return fetchJson(`/api/profiles/${id}/follow`, {
+    method: "POST",
+  });
+}
+
+export function unfollowProfile(id) {
+  return fetchJson(`/api/profiles/${id}/follow`, {
+    method: "DELETE",
+  });
 }
 
 export function getSidebarData() {

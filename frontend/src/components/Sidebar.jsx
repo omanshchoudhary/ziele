@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { getSidebarData } from "../lib/api";
+import FollowButton from "./FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 import "./Sidebar.css";
 
@@ -87,14 +88,13 @@ function Sidebar() {
               </Link>
               <span className="user-handle">{user.handle}</span>
             </div>
-
-            <button
+            <FollowButton
+              profileId={user.id}
+              profileName={user.name}
+              initialIsFollowing={user.isFollowing}
+              isOwnProfile={user.isOwnProfile}
               className="follow-btn"
-              type="button"
-              aria-label={`Follow ${user.name}`}
-            >
-              Follow
-            </button>
+            />
           </div>
         ))}
 

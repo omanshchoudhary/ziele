@@ -20,6 +20,12 @@
   gap: 1rem;
 }
 
+.post-detail-media-shell .media-attachment-image,
+.post-detail-media-shell .media-attachment-video {
+  max-height: 560px;
+  object-fit: contain;
+}
+
 .post-detail-title {
   font-size: 2rem !important;
   line-height: 1.2;

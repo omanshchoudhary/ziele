@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getDiscoverData } from "../lib/api";
+import FollowButton from "../components/FollowButton";
 import "./Discover.css";
 
 function normalizeTag(value) {
@@ -226,7 +227,12 @@ function Discover() {
                         </div>
                         <div className="creator-card-body">
                           <div className="creator-name-row">
-                            <p className="creator-name">{profile.name}</p>
+                            <Link
+                              to={`/profile/${encodeURIComponent(profile.id)}`}
+                              className="creator-name"
+                            >
+                              {profile.name}
+                            </Link>
                             <p className="creator-username">{profile.handle}</p>
                           </div>
                           <p className="creator-bio">{profile.note}</p>
@@ -242,9 +248,13 @@ function Discover() {
                               {profile.posts}
                             </span>
                           </div>
-                          <button className="creator-follow-btn" type="button">
-                            Follow
-                          </button>
+                          <FollowButton
+                            profileId={profile.id}
+                            profileName={profile.name}
+                            initialIsFollowing={profile.isFollowing}
+                            isOwnProfile={profile.isOwnProfile}
+                            className="creator-follow-btn follow-btn"
+                          />
                         </div>
                       </article>
                     ))}

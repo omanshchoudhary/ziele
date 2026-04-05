@@ -1,1 +1,6 @@
-export { getProfileById, getProfiles } from './contentModel.js';
+export {
+  followProfileByIds,
+  getProfileById,
+  getProfiles,
+  unfollowProfileByIds,
+} from './contentModel.js';
