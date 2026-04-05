@@ -292,61 +292,63 @@ Most student-level blogging systems only support create/read posts and basic com
 
 ## 10. Detailed Task Checklist (Start to End)
 
+Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integration, the profile/create/discover/notifications experiences, Express MVC routes, Prisma-backed post/comment/profile data access, and Clerk webhook-based local user sync are in place. Realtime, AI features, Redis, deployment, testing, and several production hardening tasks are still pending.
+
 ### 10.1 Planning and Setup
 - [x] Freeze project name, scope, and acceptance criteria.
 - [x] Create Git repository and branch strategy (`main`, `dev`, feature branches).
 - [x] Initialize React frontend structure.
-- [ ] Initialize Express+tRPC backend structure (Current: Basic Express shell).
+- [ ] Initialize Express+tRPC backend structure (Current: Express MVC + Prisma backend exists; tRPC is not added yet).
 - [x] Configure TypeScript (Vite + tsconfig base).
-- [ ] Configure ESLint, Prettier.
+- [ ] Configure ESLint, Prettier (Current: frontend ESLint config exists; Prettier/backend linting are not set up).
 - [x] Create `.env.example` with all required keys.
-- [ ] Setup Clerk project and keys.
-- [ ] Setup PostgreSQL instance and Prisma connection.
+- [ ] Setup Clerk project and keys (Current: Clerk SDK wiring + env examples exist; live project keys still need setup/verification).
+- [ ] Setup PostgreSQL instance and Prisma connection (Current: Prisma schema/client/config are wired; live DB setup and migrations are not tracked here yet).
 - [ ] Setup Redis (cache + pub/sub + rate limit store).
 - [ ] Setup Cloudinary, Resend, Gemini, LibreTranslate credentials.
 - [ ] Setup CI checks (lint/build/test).
 
 ### 10.2 Database and Prisma
-- [ ] Design ER model for all entities.
-- [ ] Implement Prisma schema models and relations.
+- [ ] Design ER model for all entities (Current: a partial model is implemented in Prisma, but not the full PRD entity set).
+- [ ] Implement Prisma schema models and relations (Current: `User`, `Profile`, `Post`, `Comment`, and `Notification` are modeled).
 - [ ] Add migrations for initial schema.
-- [ ] Add seed script for demo users/posts/tags.
+- [ ] Add seed script for demo users/posts/tags (Current: local seed data files exist, but not a Prisma seed runner).
 - [ ] Add indexes on hot queries (post createdAt, tags, reactions, follow relations).
 
 ### 10.3 Authentication and User Module
 - [x] Integrate Clerk on frontend.
-- [ ] Add backend middleware for authenticated routes.
-- [ ] Sync Clerk user to local DB on first login.
+- [x] Add backend middleware for authenticated routes.
+- [x] Sync Clerk user to local DB on first login/signup path (via Clerk webhook sync).
 - [x] Build profile page (avatar, bio, badge, streak) (UI Done).
 
 ### 10.4 Blog Editor and Post Management
-- [ ] Integrate Quill.js editor.
+- [x] Integrate Quill.js editor.
 - [x] Build create post form UI (title, content, tags, cover/media).
-- [ ] Implement post create/read/update/delete APIs.
-- [ ] Add slug/link generation for shareable URLs.
-- [ ] Sanitize/validate rich text payload before storing.
+- [ ] Implement post create/read/update/delete APIs (Current: create + list/detail + related/random APIs exist; update/delete are missing).
+- [ ] Add slug/link generation for shareable URLs (Current: share links use `/post/:id`; no slug generation yet).
+- [ ] Sanitize/validate rich text payload before storing (Current: required-field validation exists; sanitization is still missing).
 
 ### 10.5 Media Handling
 - [ ] Implement local image/video upload to Cloudinary.
-- [ ] Implement “paste media URL” validation and storage.
+- [ ] Implement “paste media URL” validation and storage (Current: cover URL is collected/stored, but not validated/rendered as a finished feature).
 - [ ] Render media safely in post detail.
 
 ### 10.6 Social Features
 - [ ] Implement follow/unfollow APIs.
-- [x] Show follower/following counts and lists (UI Done).
-- [x] Add follow CTA on profile/post cards (UI Done).
+- [ ] Show follower/following counts and lists (Current: counts are visible on profile; dedicated lists page is still a placeholder).
+- [ ] Add follow CTA on profile/post cards (Current: profile/discover/sidebar CTAs exist, but post-card actions/backend wiring are not done).
 
 ### 10.7 Engagement Features
-- [x] Implement like/dislike toggle (Frontend Done).
-- [ ] Build comment CRUD (minimum create/read/delete-own).
-- [x] Implement bookmark toggle and bookmarks page (Frontend Done).
+- [x] Implement like/dislike toggle (Frontend-only state is present in feed/post detail).
+- [ ] Build comment CRUD (minimum create/read/delete-own) (Current: create/read/delete flow exists, but delete-own enforcement is not complete).
+- [ ] Implement bookmark toggle and bookmarks page (Current: frontend-only toggle exists; `/bookmarks` is still a placeholder).
 - [ ] Update counts in UI in near real-time.
 
 ### 10.8 Discovery and Communities
-- [ ] Build trending algorithm (engagement + recency score).
-- [ ] Build recommendations endpoint (manual logic).
-- [ ] Implement magic random post endpoint.
-- [x] Build communities/discover pages based on tags/topics (UI Done).
+- [ ] Build trending algorithm (engagement + recency score) (Current: sidebar topic ranking exists, but not the full trending flow).
+- [ ] Build recommendations endpoint (manual logic) (Current: discover filtering/search API exists, but not personalized recommendations).
+- [x] Implement magic random post endpoint.
+- [x] Build communities/discover pages based on tags/topics (Discover is API-backed; Communities is still using mock data).
 
 ### 10.9 AI Features
 - [ ] Implement translation endpoint with LibreTranslate.
@@ -359,7 +361,7 @@ Most student-level blogging systems only support create/read posts and basic com
 - [ ] Setup Socket.io server and client integration.
 - [ ] Setup Redis pub/sub channels for distributed notifications.
 - [ ] Trigger notifications on follow/comment/reaction.
-- [x] Build notifications panel and unread badge (UI Done).
+- [x] Build notifications panel and unread count UI.
 
 ### 10.11 Email Reminders
 - [ ] Create React Email templates.
@@ -369,14 +371,14 @@ Most student-level blogging systems only support create/read posts and basic com
 
 ### 10.12 Gamification
 - [ ] Implement daily streak updater (once per calendar day).
-- [ ] Show streak count and milestones (e.g., 7-day/30-day).
-- [ ] Implement premium badge visibility logic.
+- [ ] Show streak count and milestones (e.g., 7-day/30-day) (Current: streak count is shown on profile; milestone logic is pending).
+- [ ] Implement premium badge visibility logic (Current: badge can render from profile data, but business/admin logic is not implemented).
 
 ### 10.13 Analytics Dashboard
 - [ ] Track post views and engagements.
 - [ ] Create aggregate analytics APIs.
-- [ ] Implement Chart.js graphs (daily views, engagement trend, top posts).
-- [ ] Add time filters (7/30/90 days).
+- [ ] Implement Chart.js graphs (daily views, engagement trend, top posts) (Current: analytics page is a static Recharts prototype).
+- [ ] Add time filters (7/30/90 days) (Current: filter chips exist in the UI, but are not data-backed).
 
 ### 10.14 Rate Limiting, Cache, and Security
 - [ ] Apply Redis rate limiting middleware on sensitive routes.
@@ -389,7 +391,7 @@ Most student-level blogging systems only support create/read posts and basic com
 - [x] Implement responsive layouts (mobile + desktop).
 - [x] Build light/dark theme toggle.
 - [x] Persist theme preference (Local Storage).
-- [ ] Polish loading states, error states, empty states.
+- [ ] Polish loading states, error states, empty states (Current: several core pages have these states, but coverage is not complete app-wide).
 
 ### 10.16 Testing
 - [ ] Unit tests for business logic (streak, scoring, recommendations).
@@ -410,7 +412,7 @@ Most student-level blogging systems only support create/read posts and basic com
 - [ ] Update README with setup and architecture.
 - [ ] Add API documentation and environment setup guide.
 - [ ] Create ER diagram and architecture diagram.
-- [ ] Prepare demo data and test accounts.
+- [ ] Prepare demo data and test accounts (Current: demo seed content exists, but test-account setup is not documented).
 - [ ] Record demo script: login -> create post -> social engagement -> AI tools -> analytics.
 - [ ] Prepare known limitations and future scope section.
 - [ ] Final smoke test on production deployment.
