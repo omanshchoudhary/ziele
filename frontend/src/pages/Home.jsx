@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getPosts } from "../lib/api";
 import FollowButton from "../components/FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
@@ -10,6 +10,9 @@ function Home() {
   const [reactionState, setReactionState] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchQuery = (searchParams.get("q") || "").trim();
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +55,34 @@ function Home() {
       return bDate - aDate;
     });
   }, [posts]);
+
+  // Filter posts when a search query is active
+  const filteredPosts = useMemo(() => {
+    if (!searchQuery) return sortedPosts;
+
+    const q = searchQuery.toLowerCase();
+    return sortedPosts.filter((post) => {
+      const title = (post.title || "").toLowerCase();
+      const content = (post.summary || post.contentText || post.content || "").toLowerCase();
+      const author = (post.authorName || "").toLowerCase();
+      const handle = (post.authorHandle || "").toLowerCase();
+      const tags = (post.tags || []).map((t) => t.toLowerCase());
+
+      return (
+        title.includes(q) ||
+        content.includes(q) ||
+        author.includes(q) ||
+        handle.includes(q) ||
+        tags.some((tag) => tag.includes(q))
+      );
+    });
+  }, [sortedPosts, searchQuery]);
+
+  const clearSearch = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("q");
+    setSearchParams(next);
+  };
 
   const onLike = (postId) => {
     setReactionState((current) => {
@@ -150,7 +181,77 @@ function Home() {
 
   return (
     <div className="feed">
-      {sortedPosts.map((post) => {
+      {searchQuery && (
+        <div className="feed-search-banner" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0.75rem 1.25rem",
+          marginBottom: "0.75rem",
+          borderRadius: "var(--radius-lg, 14px)",
+          background: "var(--bg-card-2, rgba(255,255,255,0.06))",
+          border: "1px solid var(--glass-border, rgba(255,255,255,0.08))",
+          fontSize: "0.9rem",
+          color: "var(--text-soft, #aaa)",
+        }}>
+          <span>
+            Showing <strong style={{ color: "var(--text-main, #fff)" }}>{filteredPosts.length}</strong>
+            {filteredPosts.length === 1 ? " result" : " results"} for{" "}
+            <strong style={{ color: "var(--accent-primary, #ff5c9d)" }}>"{searchQuery}"</strong>
+          </span>
+          <button
+            type="button"
+            onClick={clearSearch}
+            style={{
+              background: "none",
+              border: "1px solid var(--glass-border, rgba(255,255,255,0.12))",
+              color: "var(--text-soft, #aaa)",
+              cursor: "pointer",
+              padding: "0.3rem 0.75rem",
+              borderRadius: "var(--radius-md, 8px)",
+              fontSize: "0.82rem",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => { e.target.style.background = "var(--bg-card-2, rgba(255,255,255,0.08))"; }}
+            onMouseLeave={(e) => { e.target.style.background = "none"; }}
+          >
+            Clear search
+          </button>
+        </div>
+      )}
+
+      {filteredPosts.length === 0 && searchQuery && (
+        <div style={{
+          textAlign: "center",
+          padding: "3rem 1rem",
+          color: "var(--text-muted, #666)",
+        }}>
+          <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🔍</p>
+          <p style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-soft, #aaa)" }}>
+            No stories match your search
+          </p>
+          <p style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
+            Try different keywords or{" "}
+            <button
+              type="button"
+              onClick={clearSearch}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--accent-primary, #ff5c9d)",
+                cursor: "pointer",
+                textDecoration: "underline",
+                fontSize: "inherit",
+                padding: 0,
+              }}
+            >
+              clear the search
+            </button>
+          </p>
+        </div>
+      )}
+
+      {filteredPosts.map((post) => {
         const state = reactionState[post.id];
 
         return (

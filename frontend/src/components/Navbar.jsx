@@ -9,15 +9,15 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Pages that support in-page search filtering
+  const SEARCHABLE_PATHS = ["/", "/discover", "/communities"];
+
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);
     const queryFromUrl = params.get("q") || "";
 
     setSearchQuery((currentQuery) => {
-      if (
-        location.pathname === "/discover" ||
-        location.pathname === "/communities"
-      ) {
+      if (SEARCHABLE_PATHS.includes(location.pathname)) {
         return queryFromUrl;
       }
 
@@ -28,6 +28,13 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
       return currentQuery;
     });
   }, [location.pathname, location.search]);
+
+  // Resolve which page the search targets:
+  // stay on Home / Discover / Communities; default to Discover for other pages.
+  const resolveSearchPath = () => {
+    if (SEARCHABLE_PATHS.includes(location.pathname)) return location.pathname;
+    return "/discover";
+  };
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
@@ -42,7 +49,7 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
     }
 
     const nextQuery = params.toString();
-    const targetPath = location.pathname === "/communities" ? "/communities" : "/discover";
+    const targetPath = resolveSearchPath();
     navigate(`${targetPath}${nextQuery ? `?${nextQuery}` : ""}`);
   };
 
@@ -51,7 +58,7 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
     const params = new URLSearchParams(location.search);
     params.delete("q");
     const nextQuery = params.toString();
-    const targetPath = location.pathname === "/communities" ? "/communities" : "/discover";
+    const targetPath = resolveSearchPath();
     navigate(`${targetPath}${nextQuery ? `?${nextQuery}` : ""}`);
   };
 

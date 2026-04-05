@@ -427,8 +427,35 @@ export const getDiscoverData = withFallback(
     const q = (params.q || "").toLowerCase();
     const tag = (params.tag || "").toLowerCase();
 
-    let blogs = [...mockDiscoverBlogs];
+    // Convert mockPosts to discover-blog shape so we can merge them
+    const postsAsBlogs = mockPosts.map((post) => ({
+      id: `post-${post.id}`,
+      title: post.title,
+      summary: post.content,
+      author: post.authorName,
+      category: post.tags?.[0] || "General",
+      views: typeof post.views === "number"
+        ? post.views >= 1000
+          ? `${(post.views / 1000).toFixed(1).replace(".0", "")}k`
+          : String(post.views)
+        : "0",
+      readTime: post.readTime || "5 min read",
+      // Keep real post ID for linking
+      _realPostId: post.id,
+    }));
+
+    // Start with dedicated discover blogs + converted posts
+    let blogs = [...mockDiscoverBlogs, ...postsAsBlogs];
     let creators = [...mockDiscoverCreators];
+
+    // De-duplicate by title (prefer the dedicated discover entry)
+    const seenTitles = new Set();
+    blogs = blogs.filter((b) => {
+      const key = b.title.toLowerCase();
+      if (seenTitles.has(key)) return false;
+      seenTitles.add(key);
+      return true;
+    });
 
     if (q) {
       blogs = blogs.filter(
@@ -454,6 +481,8 @@ export const getDiscoverData = withFallback(
     return {
       blogs: blogs.map((b) => ({
         ...b,
+        // Use real post ID if available (so "Read now" links work)
+        id: b._realPostId || b.id,
         isFollowing: false,
         isOwnProfile: false,
       })),
