@@ -45,6 +45,7 @@ model Profile {
   postsCount  Int      @default(0)
   likes       Int      @default(0)
   streak      Int      @default(0)
+  lastActiveAt DateTime?
   isPremium   Boolean  @default(false)
   joined      String   // Formatted string like "April 2026"
 
@@ -52,9 +53,13 @@ model Profile {
   posts       Post[]
   comments    Comment[]
   reactions   Reaction[]
+  bookmarks   Bookmark[]
   reminderLogs EmailReminderLog[]
   followerLinks Follow[] @relation("ProfileFollowers")
   followingLinks Follow[] @relation("ProfileFollowing")
+
+  @@index([followers])
+  @@index([following])
 }
 
 // ==========================================
@@ -89,9 +94,13 @@ model Post {
   // One post has many comments
   comments     Comment[]
   reactions    Reaction[]
+  bookmarksRel Bookmark[]
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([profileId, createdAt])
+  @@index([createdAt])
 }
 
 // ==========================================
@@ -112,6 +121,9 @@ model Comment {
   
   content      String
   createdAt    DateTime @default(now())
+
+  @@index([postId, createdAt])
+  @@index([profileId, createdAt])
 }
 
 // ==========================================
@@ -129,6 +141,8 @@ model Notification {
   metadata     Json?
   read         Boolean  @default(false)
   timestamp    DateTime @default(now())
+
+  @@index([targetUser, read, timestamp])
 }
 
 model Follow {
@@ -140,6 +154,8 @@ model Follow {
   following   Profile @relation("ProfileFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
+  @@index([followerId, createdAt])
+  @@index([followingId, createdAt])
 }
 
 model Reaction {
@@ -154,6 +170,21 @@ model Reaction {
   profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@unique([postId, profileId])
+  @@index([profileId, createdAt])
+  @@index([postId, createdAt])
+}
+
+model Bookmark {
+  postId    Int
+  profileId String
+  createdAt DateTime @default(now())
+
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@id([postId, profileId])
+  @@index([profileId, createdAt])
+  @@index([postId, createdAt])
 }
 
 model EmailReminderLog {

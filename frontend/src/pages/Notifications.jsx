@@ -4,6 +4,7 @@ import {
   connectNotificationsSocket,
   getCurrentProfile,
   getNotifications as getNotificationsApi,
+  markNotificationsRead,
 } from "../lib/apiClient";
 
 function Notifications() {
@@ -236,6 +237,7 @@ function Notifications() {
   }, []);
 
   const markAllAsRead = () => {
+    markNotificationsRead().catch(() => null);
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
   };
 

@@ -48,9 +48,9 @@ router.get(
   "/me",
   requireAuthWithContext,
   requireUserId,
-  (req, res) => {
+  async (req, res) => {
     const clerkId = req.authContext.userId;
-    const profile = getProfileForClerkUser(clerkId);
+    const profile = await getProfileForClerkUser(clerkId);
 
     if (!profile) {
       return res.status(404).json({

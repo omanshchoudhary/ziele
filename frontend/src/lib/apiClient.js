@@ -17,7 +17,9 @@ import {
   deleteComment as mockDeleteComment,
 } from "../data/mockData";
 
-const USE_MOCK_FALLBACK = true;
+const USE_MOCK_FALLBACK =
+  String(import.meta.env.VITE_USE_MOCK_FALLBACK || "true").toLowerCase() ===
+  "true";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
@@ -100,6 +102,8 @@ function adaptPostForFeed(post) {
     isFollowingAuthor: Boolean(post.isFollowingAuthor),
     isOwnAuthor: Boolean(post.isOwnAuthor),
     viewerReaction: post.viewerReaction || null,
+    isBookmarked: Boolean(post.isBookmarked),
+    sharePath: post.sharePath || `/post/${post.id}`,
   };
 }
 
@@ -345,6 +349,43 @@ export const reactToPost = withFallback(
   },
 );
 
+export const toggleBookmark = withFallback(
+  (postId) =>
+    fetchJson(`/api/posts/${postId}/bookmark`, {
+      method: "POST",
+    }),
+  async (postId) => {
+    await delay(120);
+    const post = mockPosts.find((item) => Number(item.id) === Number(postId));
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    post.isBookmarked = !post.isBookmarked;
+    post.bookmarks = post.isBookmarked
+      ? (post.bookmarks || 0) + 1
+      : Math.max(0, (post.bookmarks || 0) - 1);
+
+    return {
+      bookmarked: post.isBookmarked,
+      post: adaptPostForFeed(post),
+    };
+  },
+);
+
+export const getBookmarkedPosts = withFallback(
+  () => fetchJson("/api/posts/bookmarks/list"),
+  async () => {
+    await delay(120);
+    return mockPosts
+      .filter((post) => post.isBookmarked)
+      .map((post) => ({
+        ...adaptPostForFeed(post),
+        savedAt: new Date().toISOString(),
+      }));
+  },
+);
+
 export async function uploadPostMedia(file) {
   try {
     const headers = await buildHeaders({ method: "POST", body: new FormData() });
@@ -440,6 +481,27 @@ export const getNotifications = withFallback(
   async () => {
     await delay();
     return mockNotifications;
+  },
+);
+
+export const getUnreadNotificationCount = withFallback(
+  () => fetchJson("/api/notifications/unread-count"),
+  async () => {
+    await delay(60);
+    return {
+      unreadCount: mockNotifications.filter((item) => !item.read).length,
+    };
+  },
+);
+
+export const markNotificationsRead = withFallback(
+  () =>
+    fetchJson("/api/notifications/mark-read", {
+      method: "POST",
+    }),
+  async () => {
+    await delay(80);
+    return { ok: true };
   },
 );
 
@@ -554,6 +616,133 @@ export const getDiscoverData = withFallback(
         isOwnProfile: false,
       })),
       categories: discoverCategories,
+    };
+  },
+);
+
+export const getRecommendationsData = withFallback(
+  (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return fetchJson(`/api/meta/recommendations${suffix}`);
+  },
+  async () => {
+    await delay(120);
+    return mockPosts.slice(0, 8).map(adaptPostForFeed);
+  },
+);
+
+export const getTrendingData = withFallback(
+  (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.q) query.set("q", params.q);
+    if (params.tag) query.set("tag", params.tag);
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return fetchJson(`/api/meta/trending${suffix}`);
+  },
+  async () => {
+    await delay(140);
+    return {
+      topics: mockTrendingTopics.map((topic) => ({
+        topic: topic.topic,
+        tag: topic.tag,
+        score: Number(topic.posts) || 0,
+      })),
+      posts: mockPosts.map((post, index) => ({
+        ...adaptPostForFeed(post),
+        trendScore: (post.likes || 0) * 4 + (post.comments || 0) * 3 + (post.views || 0) * 0.1,
+        trendRank: index + 1,
+      })),
+      authors: mockProfiles.slice(0, 6).map((profile, index) => ({
+        id: profile.id,
+        name: profile.name,
+        handle: profile.handle,
+        avatar: profile.avatar,
+        score: 100 - index * 8,
+        posts: profile.posts || 0,
+      })),
+    };
+  },
+);
+
+export const getCommunitiesData = withFallback(
+  (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.q) query.set("q", params.q);
+    if (params.tag) query.set("tag", params.tag);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return fetchJson(`/api/meta/communities${suffix}`);
+  },
+  async () => {
+    await delay(140);
+    const communities = discoverCategories
+      .filter((category) => category !== "Recommended")
+      .map((category, index) => ({
+        id: category.toLowerCase(),
+        name: `${category} Community`,
+        category,
+        description: `Talk about ${category} with active creators.`,
+        posts: 12 + index * 3,
+        members: 240 + index * 45,
+        trendScore: 80 - index * 4,
+        tags: [category],
+      }));
+
+    return {
+      communities,
+      categories: discoverCategories,
+    };
+  },
+);
+
+export const getAnalyticsData = withFallback(
+  (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.range) query.set("range", String(params.range));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return fetchJson(`/api/meta/analytics${suffix}`);
+  },
+  async (params = {}) => {
+    await delay(160);
+    const range = Number(params.range || 30);
+    const series = Array.from({ length: range }, (_, index) => ({
+      date: `Day ${index + 1}`,
+      views: 20 + index * 2,
+      likes: 8 + Math.floor(index * 1.4),
+      dislikes: Math.floor(index / 10),
+      comments: 2 + Math.floor(index * 0.6),
+    }));
+
+    return {
+      range,
+      generatedAt: new Date().toISOString(),
+      totals: {
+        posts: mockPosts.length,
+        views: mockPosts.reduce((sum, post) => sum + (post.views || 0), 0),
+        likes: mockPosts.reduce((sum, post) => sum + (post.likes || 0), 0),
+        dislikes: mockPosts.reduce((sum, post) => sum + (post.dislikes || 0), 0),
+        bookmarks: mockPosts.reduce((sum, post) => sum + (post.bookmarks || 0), 0),
+        comments: mockPosts.reduce((sum, post) => sum + (post.comments || 0), 0),
+        followers: 1200,
+        streak: 14,
+      },
+      streakMilestones: [
+        { target: 7, reached: true, remaining: 0 },
+        { target: 30, reached: false, remaining: 16 },
+        { target: 100, reached: false, remaining: 86 },
+      ],
+      series,
+      topPosts: mockPosts.slice(0, 5).map((post, index) => ({
+        id: post.id,
+        title: post.title,
+        views: post.views || 0,
+        likes: post.likes || 0,
+        dislikes: post.dislikes || 0,
+        comments: post.comments || 0,
+        score: 100 - index * 7,
+      })),
     };
   },
 );

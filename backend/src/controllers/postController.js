@@ -1,13 +1,17 @@
 import {
   createComment,
   createPost,
+  deletePostById,
+  getBookmarkedPosts,
   getCommentsByPostId,
   getPostById as getPostByIdModel,
   getPostOwnerProfile,
   getPosts,
   getRandomPost,
   getRelatedPosts,
+  toggleBookmark,
   toggleReaction,
+  updatePostById,
 } from "../models/postModel.js";
 import { getProfileForClerkUser } from "../models/clerkSyncModel.js";
 import { cloudinary } from "../integrations/cloudinaryClient.js";
@@ -18,10 +22,16 @@ import {
   validateExternalMediaUrl,
 } from "../utils/mediaUtils.js";
 
+function statusFromError(error, fallback = 400) {
+  return Number(error?.statusCode || fallback);
+}
+
 async function resolveAuthProfile(req) {
   const clerkUserId = req?.authContext?.userId || null;
   if (!clerkUserId) return null;
-  return await getProfileForClerkUser(clerkUserId);
+  const profile = await getProfileForClerkUser(clerkUserId);
+  req.resolvedProfile = profile || null;
+  return profile;
 }
 
 function applyAuthenticatedAuthor(input = {}, profile = null) {
@@ -63,12 +73,54 @@ export const getPostById = async (req, res) => {
 export const createPostItem = async (req, res) => {
   try {
     const authProfile = await resolveAuthProfile(req);
-    const payload = applyAuthenticatedAuthor(req.body || {}, authProfile);
+    const payload = applyAuthenticatedAuthor(
+      req.validatedBody || req.body || {},
+      authProfile,
+    );
 
     const post = await createPost(payload);
     res.status(201).json(post);
   } catch (error) {
-    res.status(400).json({ error: error.message || "Failed to create post" });
+    res
+      .status(statusFromError(error))
+      .json({ error: error.message || "Failed to create post" });
+  }
+};
+
+export const updatePostItem = async (req, res) => {
+  try {
+    const authProfile = await resolveAuthProfile(req);
+    if (!authProfile?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const post = await updatePostById(
+      req.params.id,
+      req.validatedBody || req.body || {},
+      authProfile.id,
+    );
+
+    return res.json(post);
+  } catch (error) {
+    return res.status(statusFromError(error)).json({
+      error: error.message || "Failed to update post.",
+    });
+  }
+};
+
+export const deletePostItem = async (req, res) => {
+  try {
+    const authProfile = await resolveAuthProfile(req);
+    if (!authProfile?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    await deletePostById(req.params.id, authProfile.id);
+    return res.status(204).send();
+  } catch (error) {
+    return res.status(statusFromError(error)).json({
+      error: error.message || "Failed to delete post.",
+    });
   }
 };
 
@@ -97,7 +149,10 @@ export const getPostComments = async (req, res) => {
 export const createPostComment = async (req, res) => {
   try {
     const authProfile = await resolveAuthProfile(req);
-    const payload = applyAuthenticatedAuthor(req.body || {}, authProfile);
+    const payload = applyAuthenticatedAuthor(
+      req.validatedBody || req.body || {},
+      authProfile,
+    );
 
     const comment = await createComment(req.params.id, payload);
 
@@ -118,7 +173,10 @@ export const createPostComment = async (req, res) => {
 
     res.status(201).json(comment);
   } catch (error) {
-    const status = error.message === "Post not found" ? 404 : 400;
+    const status = statusFromError(
+      error,
+      error.message === "Post not found" ? 404 : 400,
+    );
     res
       .status(status)
       .json({ error: error.message || "Failed to create comment" });
@@ -148,7 +206,7 @@ export const reactToPostItem = async (req, res) => {
     const { post, reaction } = await toggleReaction(
       req.params.id,
       authProfile.id,
-      req.body?.type,
+      (req.validatedBody || req.body || {}).type,
     );
 
     if (reaction) {
@@ -169,16 +227,51 @@ export const reactToPostItem = async (req, res) => {
       post,
     });
   } catch (error) {
-    const status = error.message === "Post not found" ? 404 : 400;
+    const status = statusFromError(
+      error,
+      error.message === "Post not found" ? 404 : 400,
+    );
     return res.status(status).json({
       error: error.message || "Failed to react to post.",
     });
   }
 };
 
+export const togglePostBookmarkItem = async (req, res) => {
+  try {
+    const authProfile = await resolveAuthProfile(req);
+    if (!authProfile?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const result = await toggleBookmark(req.params.id, authProfile.id);
+    return res.json(result);
+  } catch (error) {
+    return res.status(statusFromError(error)).json({
+      error: error.message || "Failed to update bookmark.",
+    });
+  }
+};
+
+export const getMyBookmarks = async (req, res) => {
+  try {
+    const authProfile = await resolveAuthProfile(req);
+    if (!authProfile?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const bookmarks = await getBookmarkedPosts(authProfile.id);
+    return res.json(bookmarks);
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message || "Failed to fetch bookmarks.",
+    });
+  }
+};
+
 export const validatePostMediaUrlItem = async (req, res) => {
   try {
-    const { mediaUrl, mediaType } = req.body || {};
+    const { mediaUrl, mediaType } = req.validatedBody || req.body || {};
     const validated = validateExternalMediaUrl(mediaUrl, mediaType);
 
     return res.json({

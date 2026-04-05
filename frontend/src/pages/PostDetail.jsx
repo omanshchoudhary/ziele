@@ -6,6 +6,7 @@ import {
   getRelatedPosts,
   reactToPost,
   summarizePostContent,
+  toggleBookmark,
   translatePostContent,
 } from "../lib/apiClient";
 import FollowButton from "../components/FollowButton";
@@ -87,7 +88,7 @@ function PostDetail() {
     setBookmarks(post?.bookmarks || 0);
     setLiked(post?.viewerReaction === "like");
     setDisliked(post?.viewerReaction === "dislike");
-    setBookmarked(false);
+    setBookmarked(Boolean(post?.isBookmarked));
     setTranslatedText("");
     setTranslationMessage("");
     setSummaryResult(null);
@@ -148,8 +149,19 @@ function PostDetail() {
   };
 
   const onBookmark = () => {
-    setBookmarked((prev) => !prev);
-    setBookmarks((prev) => (bookmarked ? Math.max(0, prev - 1) : prev + 1));
+    if (!post?.id) return;
+
+    toggleBookmark(post.id)
+      .then((response) => {
+        if (!response?.post) return;
+
+        setPost((current) => ({ ...(current || {}), ...response.post }));
+        setBookmarked(Boolean(response.bookmarked));
+        setBookmarks(response.post.bookmarks || 0);
+      })
+      .catch((bookmarkError) => {
+        window.alert(bookmarkError.message || "Unable to save bookmark.");
+      });
   };
 
   const handleTranslate = async () => {
@@ -196,7 +208,7 @@ function PostDetail() {
   };
 
   const onShare = async () => {
-    const shareUrl = `${window.location.origin}/post/${id}`;
+    const shareUrl = `${window.location.origin}${post?.sharePath || `/post/${id}`}`;
 
     if (navigator.share) {
       try {

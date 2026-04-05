@@ -1,1 +1,8 @@
-export { getDiscoverData, getSidebarData } from './contentModel.js';
+export {
+  getAnalyticsData,
+  getCommunitiesData,
+  getDiscoverData,
+  getRecommendationsData,
+  getSidebarData,
+  getTrendingData,
+} from './contentModel.js';

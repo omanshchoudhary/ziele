@@ -6,10 +6,11 @@ import {
 
 export async function translatePostContent(req, res) {
   try {
+    const payload = req.validatedBody || req.body || {};
     const result = await translateContent({
-      text: req.body?.text || "",
-      sourceLanguage: req.body?.sourceLanguage || "auto",
-      targetLanguage: req.body?.targetLanguage || "English",
+      text: payload.text || "",
+      sourceLanguage: payload.sourceLanguage || "auto",
+      targetLanguage: payload.targetLanguage || "English",
     });
 
     return res.json(result);
@@ -22,10 +23,11 @@ export async function translatePostContent(req, res) {
 
 export async function summarizePostContent(req, res) {
   try {
+    const payload = req.validatedBody || req.body || {};
     const result = await summarizeContent({
-      title: req.body?.title || "",
-      text: req.body?.text || "",
-      targetLanguage: req.body?.targetLanguage || "English",
+      title: payload.title || "",
+      text: payload.text || "",
+      targetLanguage: payload.targetLanguage || "English",
     });
 
     return res.json(result);
@@ -38,10 +40,11 @@ export async function summarizePostContent(req, res) {
 
 export async function factCheckPostContent(req, res) {
   try {
+    const payload = req.validatedBody || req.body || {};
     const result = await factCheckContent({
-      title: req.body?.title || "",
-      text: req.body?.text || "",
-      tags: req.body?.tags || [],
+      title: payload.title || "",
+      text: payload.text || "",
+      tags: payload.tags || [],
     });
 
     return res.json(result);

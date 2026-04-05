@@ -1,4 +1,6 @@
 export {
+  deletePostById,
+  getBookmarkedPosts,
   createComment,
   createPost,
   deleteCommentById,
@@ -9,4 +11,6 @@ export {
   getRandomPost,
   getRelatedPosts,
   toggleReaction,
+  toggleBookmark,
+  updatePostById,
 } from './contentModel.js';

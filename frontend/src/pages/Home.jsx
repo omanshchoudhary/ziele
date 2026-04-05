@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getPosts, reactToPost } from "../lib/apiClient";
+import { getPosts, reactToPost, toggleBookmark } from "../lib/apiClient";
 import FollowButton from "../components/FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 import "../components/PostCard.css";
@@ -27,7 +27,7 @@ function Home() {
             acc[post.id] = {
               liked: post.viewerReaction === "like",
               disliked: post.viewerReaction === "dislike",
-              bookmarked: false,
+              bookmarked: Boolean(post.isBookmarked),
               likes: post.likes || 0,
               dislikes: post.dislikes || 0,
               bookmarks: post.bookmarks || 0,
@@ -118,22 +118,37 @@ function Home() {
   };
 
   const onBookmark = (postId) => {
-    setReactionState((current) => {
-      const previous = current[postId];
-      if (!previous) return current;
+    toggleBookmark(postId)
+      .then((response) => {
+        if (!response?.post) return;
 
-      const next = { ...previous };
-      next.bookmarked = !next.bookmarked;
-      next.bookmarks = next.bookmarked
-        ? next.bookmarks + 1
-        : Math.max(0, next.bookmarks - 1);
-
-      return { ...current, [postId]: next };
-    });
+        setPosts((current) =>
+          current.map((post) =>
+            post.id === postId ? { ...post, ...response.post } : post,
+          ),
+        );
+        setReactionState((current) => ({
+          ...current,
+          [postId]: {
+            ...(current[postId] || {}),
+            bookmarked: Boolean(response.bookmarked),
+            bookmarks: response.post.bookmarks || 0,
+            liked: response.post.viewerReaction === "like",
+            disliked: response.post.viewerReaction === "dislike",
+            likes: response.post.likes || current[postId]?.likes || 0,
+            dislikes: response.post.dislikes || current[postId]?.dislikes || 0,
+          },
+        }));
+      })
+      .catch((bookmarkError) => {
+        window.alert(bookmarkError.message || "Unable to save bookmark.");
+      });
   };
 
   const onShare = async (postId, title) => {
-    const shareUrl = `${window.location.origin}/post/${postId}`;
+    const post = posts.find((item) => item.id === postId);
+    const sharePath = post?.sharePath || `/post/${postId}`;
+    const shareUrl = `${window.location.origin}${sharePath}`;
 
     if (navigator.share) {
       try {

@@ -2,6 +2,7 @@ import {
   followProfileByIds,
   getProfileById,
   getProfiles,
+  touchDailyStreak,
   unfollowProfileByIds,
 } from "../models/profileModel.js";
 import { getProfileForClerkUser } from "../models/clerkSyncModel.js";
@@ -10,7 +11,9 @@ import { notifyProfile } from "../services/notificationService.js";
 async function resolveAuthProfile(req) {
   const clerkUserId = req?.authContext?.userId || null;
   if (!clerkUserId) return null;
-  return getProfileForClerkUser(clerkUserId);
+  const profile = await getProfileForClerkUser(clerkUserId);
+  req.resolvedProfile = profile || null;
+  return profile;
 }
 
 export const getAllProfiles = async (req, res) => {
@@ -40,16 +43,17 @@ export const getProfile = async (req, res) => {
 
 export const getCurrentProfile = async (req, res) => {
   try {
-    const profile = await resolveAuthProfile(req);
+    const authProfile = await resolveAuthProfile(req);
 
-    if (!profile) {
+    if (!authProfile) {
       return res.status(404).json({
         error:
           "Authenticated user exists in Clerk but no local profile is synced yet.",
       });
     }
 
-    return res.json(await getProfileById(profile.id, profile.id));
+    await touchDailyStreak(authProfile.id);
+    return res.json(await getProfileById(authProfile.id, authProfile.id));
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch current profile" });
   }
@@ -67,11 +71,11 @@ export const followProfile = async (req, res) => {
     const profile = await getProfileById(req.params.id, authProfile.id);
 
     await notifyProfile({
-      targetUser: req.params.id,
+      targetUser: profile?.id || req.params.id,
       type: "follow",
       sourceProfile: authProfile,
       metadata: {
-        profileId: req.params.id,
+        profileId: profile?.id || req.params.id,
       },
     });
 

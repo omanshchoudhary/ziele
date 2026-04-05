@@ -1,6 +1,8 @@
 import {
+  countUnreadNotifications,
   createNotificationRecord,
   getNotificationsByTarget,
+  markAllNotificationsRead,
 } from "../models/notificationModel.js";
 import {
   publishRedisMessage,
@@ -71,3 +73,11 @@ export async function listNotificationsForProfile(profileId) {
   return getNotificationsByTarget(profileId);
 }
 
+export async function getUnreadNotificationsCount(profileId) {
+  return countUnreadNotifications(profileId);
+}
+
+export async function markNotificationsRead(profileId) {
+  await markAllNotificationsRead(profileId);
+  return true;
+}

@@ -28,7 +28,7 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
 
     switch (type) {
       case "user.created": {
-        const created = upsertUserFromClerk(data || {});
+        const created = await upsertUserFromClerk(data || {});
         return res.status(200).json({
           ok: true,
           action: "user.created",
@@ -38,10 +38,10 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
 
       case "user.updated": {
         // Upsert first to ensure user exists
-        const updated = upsertUserFromClerk(data || {});
+        const updated = await upsertUserFromClerk(data || {});
 
         // Optional patch step for any extra fields Clerk sends over time
-        patchUserByClerkId(updated?.clerkId || data?.id, {
+        await patchUserByClerkId(updated?.clerkId || data?.id, {
           username: data?.username || updated?.username || "",
           imageUrl: data?.image_url || updated?.imageUrl || "",
         });
@@ -55,7 +55,7 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
 
       case "user.deleted": {
         const clerkId = data?.id || null;
-        const removed = clerkId ? deleteUserByClerkId(clerkId) : false;
+        const removed = clerkId ? await deleteUserByClerkId(clerkId) : false;
 
         return res.status(200).json({
           ok: true,

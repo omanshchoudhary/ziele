@@ -13,13 +13,13 @@ import CreatePost from "./pages/CreatePost";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Connections from "./pages/Connections";
-import TrendingPage from "./pages/TrendingPage";
-import Communities from "./pages/Communities";
-import BookmarksPage from "./pages/BookmarksPage";
+import TrendingPage from "./pages/TrendingPageReal";
+import Communities from "./pages/CommunitiesReal";
+import BookmarksPage from "./pages/BookmarksPageReal";
 import DraftsPage from "./pages/DraftsPage";
 import SettingsPage from "./pages/SettingsPage";
 import GenericPlaceholder from "./pages/GenericPlaceholder";
-import Analytics from "./pages/Analytics";
+import Analytics from "./pages/AnalyticsReal";
 import FloatingPanel from "./components/FloatingPanel";
 
 // IMPORT: Clerk Auth helper components to handle route protection
@@ -96,7 +96,7 @@ function App() {
             {/* PUBLIC ROUTES: Accessible to everyone */}
             <Route path="/" element={<Home />} />
             <Route path="/discover" element={<Discover />} />
-            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/post/:id/:slug?" element={<PostDetail />} />
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/communities" element={<Communities />} />
             {/* PRIVATE ROUTES: Require user authentication via Clerk */}
@@ -107,8 +107,8 @@ function App() {
             <Route path="/connections" element={<ProtectedRoute><Connections /></ProtectedRoute>} />
 
             {/* FULL PAGES */}
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/bookmarks" element={<BookmarksPage />} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/bookmarks" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
             <Route path="/drafts" element={<DraftsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/more" element={<GenericPlaceholder />} />

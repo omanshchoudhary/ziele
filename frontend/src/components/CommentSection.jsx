@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   createComment,
   deleteComment,
+  getCurrentProfile,
   getPostComments,
 } from "../lib/apiClient";
 import { formatCompactNumber } from "../lib/formatters";
@@ -12,6 +13,7 @@ function CommentSection({ postId }) {
   const [newCommentText, setNewCommentText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState("");
+  const [currentProfile, setCurrentProfile] = useState(null);
   const inputRef = useRef(null);
 
   const fetchComments = useCallback(async () => {
@@ -24,6 +26,26 @@ function CommentSection({ postId }) {
       setError(err.message || "Unable to load comments.");
     });
   }, [fetchComments]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getCurrentProfile()
+      .then((profile) => {
+        if (!cancelled) {
+          setCurrentProfile(profile || null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCurrentProfile(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,7 +138,10 @@ function CommentSection({ postId }) {
                   <span className="comment-dot">•</span>
                   <span className="comment-time">{comment.time}</span>
                   
-                  {comment.authorHandle === "@currentuser" && (
+                  {(comment.authorHandle === "@currentuser" ||
+                    (currentProfile?.handle &&
+                      comment.authorHandle === currentProfile.handle) ||
+                    (currentProfile?.id && comment.profileId === currentProfile.id)) && (
                     <button 
                       className="comment-delete-btn" 
                       onClick={() => handleDelete(comment.id)}
