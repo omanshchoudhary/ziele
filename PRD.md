@@ -329,14 +329,14 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [ ] Sanitize/validate rich text payload before storing (Current: required-field validation exists; sanitization is still missing).
 
 ### 10.5 Media Handling
-- [ ] Implement local image/video upload to Cloudinary.
-- [ ] Implement “paste media URL” validation and storage (Current: cover URL is collected/stored, but not validated/rendered as a finished feature).
-- [ ] Render media safely in post detail.
+- [x] Implement local image/video upload to Cloudinary (Current: upload flow is implemented; real Cloudinary credentials still need to be supplied in env).
+- [x] Implement “paste media URL” validation and storage.
+- [x] Render media safely in post detail.
 
 ### 10.6 Social Features
-- [ ] Implement follow/unfollow APIs.
-- [ ] Show follower/following counts and lists (Current: counts are visible on profile; dedicated lists page is still a placeholder).
-- [ ] Add follow CTA on profile/post cards (Current: profile/discover/sidebar CTAs exist, but post-card actions/backend wiring are not done).
+- [x] Implement follow/unfollow APIs.
+- [x] Show follower/following counts and lists (Current: profile counts and dedicated follower/following lists are wired).
+- [x] Add follow CTA on profile/post cards (Current: profile, feed, post detail, sidebar, and discover CTAs are wired).
 
 ### 10.7 Engagement Features
 - [x] Implement like/dislike toggle (Frontend-only state is present in feed/post detail).
