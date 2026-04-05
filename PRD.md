@@ -292,21 +292,21 @@ Most student-level blogging systems only support create/read posts and basic com
 
 ## 10. Detailed Task Checklist (Start to End)
 
-Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integration, the profile/create/discover/notifications experiences, Express MVC routes, Prisma-backed post/comment/profile data access, and Clerk webhook-based local user sync are in place. Realtime, AI features, Redis, deployment, testing, and several production hardening tasks are still pending.
+Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integration, the profile/create/discover/notifications experiences, Express MVC routes, a starter tRPC layer, Prisma-backed post/comment/profile data access, Clerk webhook-based local user sync, integration/env scaffolding, and CI lint/build/test checks are in place. Realtime, AI feature implementation, live service credentials, production infrastructure, and several product features are still pending.
 
 ### 10.1 Planning and Setup
 - [x] Freeze project name, scope, and acceptance criteria.
 - [x] Create Git repository and branch strategy (`main`, `dev`, feature branches).
 - [x] Initialize React frontend structure.
-- [ ] Initialize Express+tRPC backend structure (Current: Express MVC + Prisma backend exists; tRPC is not added yet).
+- [x] Initialize Express+tRPC backend structure (Current: Express MVC backend remains in place and a starter tRPC layer is mounted alongside it).
 - [x] Configure TypeScript (Vite + tsconfig base).
-- [ ] Configure ESLint, Prettier (Current: frontend ESLint config exists; Prettier/backend linting are not set up).
+- [x] Configure ESLint, Prettier.
 - [x] Create `.env.example` with all required keys.
-- [ ] Setup Clerk project and keys (Current: Clerk SDK wiring + env examples exist; live project keys still need setup/verification).
-- [ ] Setup PostgreSQL instance and Prisma connection (Current: Prisma schema/client/config are wired; live DB setup and migrations are not tracked here yet).
-- [ ] Setup Redis (cache + pub/sub + rate limit store).
-- [ ] Setup Cloudinary, Resend, Gemini, LibreTranslate credentials.
-- [ ] Setup CI checks (lint/build/test).
+- [ ] Setup Clerk project and keys (Current: Clerk frontend/backend wiring, docs, and env placeholders are set; live keys still need to be added and verified).
+- [ ] Setup PostgreSQL instance and Prisma connection (Current: Prisma config/client/adapter and health/readiness checks are wired; a real database instance and migrations still need to be run).
+- [ ] Setup Redis (cache + pub/sub + rate limit store) (Current: Redis env/config/client scaffolding is added; live Redis provisioning and feature wiring are pending).
+- [ ] Setup Cloudinary, Resend, Gemini, LibreTranslate credentials (Current: env placeholders and starter client modules are added; real credentials still need to be supplied).
+- [x] Setup CI checks (lint/build/test).
 
 ### 10.2 Database and Prisma
 - [ ] Design ER model for all entities (Current: a partial model is implemented in Prisma, but not the full PRD entity set).
