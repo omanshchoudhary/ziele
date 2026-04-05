@@ -3,13 +3,16 @@ import {
   createPost,
   getCommentsByPostId,
   getPostById as getPostByIdModel,
+  getPostOwnerProfile,
   getPosts,
   getRandomPost,
   getRelatedPosts,
+  toggleReaction,
 } from "../models/postModel.js";
 import { getProfileForClerkUser } from "../models/clerkSyncModel.js";
 import { cloudinary } from "../integrations/cloudinaryClient.js";
 import { getServiceReadinessSnapshot } from "../config/env.js";
+import { notifyProfile } from "../services/notificationService.js";
 import {
   assertUploadMimeType,
   validateExternalMediaUrl,
@@ -97,6 +100,22 @@ export const createPostComment = async (req, res) => {
     const payload = applyAuthenticatedAuthor(req.body || {}, authProfile);
 
     const comment = await createComment(req.params.id, payload);
+
+    const owner = await getPostOwnerProfile(req.params.id);
+    if (owner?.profileId && authProfile) {
+      await notifyProfile({
+        targetUser: owner.profileId,
+        type: "comment",
+        sourceProfile: authProfile,
+        postTitle: owner.title,
+        content: comment.content,
+        metadata: {
+          postId: owner.id,
+          commentId: comment.id,
+        },
+      });
+    }
+
     res.status(201).json(comment);
   } catch (error) {
     const status = error.message === "Post not found" ? 404 : 400;
@@ -116,6 +135,44 @@ export const getRelatedPostItems = async (req, res) => {
     res.json(relatedPosts);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch related posts" });
+  }
+};
+
+export const reactToPostItem = async (req, res) => {
+  try {
+    const authProfile = await resolveAuthProfile(req);
+    if (!authProfile?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { post, reaction } = await toggleReaction(
+      req.params.id,
+      authProfile.id,
+      req.body?.type,
+    );
+
+    if (reaction) {
+      await notifyProfile({
+        targetUser: post.profileId,
+        type: reaction,
+        sourceProfile: authProfile,
+        postTitle: post.title,
+        metadata: {
+          postId: post.id,
+          reaction,
+        },
+      });
+    }
+
+    return res.json({
+      reaction,
+      post,
+    });
+  } catch (error) {
+    const status = error.message === "Post not found" ? 404 : 400;
+    return res.status(status).json({
+      error: error.message || "Failed to react to post.",
+    });
   }
 };
 

@@ -6,6 +6,7 @@ import {
   getPostById,
   getPostComments,
   getRandomPostItem,
+  reactToPostItem,
   getRelatedPostItems,
   uploadPostMediaItem,
   validatePostMediaUrlItem,
@@ -41,6 +42,12 @@ router.post(
   validatePostMediaUrlItem,
 );
 router.post("/", requireAuthWithContext, requireUserId, createPostItem);
+router.post(
+  "/:id/reaction",
+  requireAuthWithContext,
+  requireUserId,
+  reactToPostItem,
+);
 router.post(
   "/:id/comments",
   requireAuthWithContext,

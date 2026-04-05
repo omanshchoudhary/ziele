@@ -5,6 +5,7 @@ import {
   unfollowProfileByIds,
 } from "../models/profileModel.js";
 import { getProfileForClerkUser } from "../models/clerkSyncModel.js";
+import { notifyProfile } from "../services/notificationService.js";
 
 async function resolveAuthProfile(req) {
   const clerkUserId = req?.authContext?.userId || null;
@@ -64,6 +65,15 @@ export const followProfile = async (req, res) => {
 
     await followProfileByIds(authProfile.id, req.params.id);
     const profile = await getProfileById(req.params.id, authProfile.id);
+
+    await notifyProfile({
+      targetUser: req.params.id,
+      type: "follow",
+      sourceProfile: authProfile,
+      metadata: {
+        profileId: req.params.id,
+      },
+    });
 
     return res.json({
       ok: true,

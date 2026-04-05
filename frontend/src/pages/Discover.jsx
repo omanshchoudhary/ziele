@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getDiscoverData } from "../lib/api";
+import { getDiscoverData } from "../lib/apiClient";
 import FollowButton from "../components/FollowButton";
 import "./Discover.css";
 

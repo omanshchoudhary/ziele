@@ -4,13 +4,12 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/clerk-react";
 import "./Navbar.css";
 
+const SEARCHABLE_PATHS = ["/", "/discover", "/communities"];
+
 function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Pages that support in-page search filtering
-  const SEARCHABLE_PATHS = ["/", "/discover", "/communities"];
 
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);

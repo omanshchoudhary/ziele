@@ -1,18 +1,5 @@
-/* eslint-disable */
-/**
- * API layer with mock-data fallback.
- *
- * Every public function first tries the real backend.  If the request fails
- * (e.g. because DB / Redis keys are not yet configured), it transparently
- * returns realistic mock data so the frontend can be developed and demoed
- * without a live database.
- *
- * ⚡  Once the backend is connected to real services, remove
- *     USE_MOCK_FALLBACK or set it to false to disable the fallback path.
- */
-
+import { io } from "socket.io-client";
 import {
-  mockPosts,
   mockNotifications,
   mockTrendingTopics,
   mockSuggestions,
@@ -20,8 +7,7 @@ import {
   mockDiscoverCreators,
   discoverCategories,
   mockProfiles,
-  mockComments,
-  mockCommunities,
+  mockPosts,
   getPostById as mockGetPostById,
   getRelatedPosts as mockGetRelatedPosts,
   getRandomPost as mockGetRandomPost,
@@ -31,14 +17,10 @@ import {
   deleteComment as mockDeleteComment,
 } from "../data/mockData";
 
-// ── Configuration ───────────────────────────────────────────────
-// Set to `false` (or remove entirely) once the backend has live DB credentials.
 const USE_MOCK_FALLBACK = true;
-
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
-// ── Auth token plumbing (unchanged) ─────────────────────────────
 let authTokenGetter = null;
 
 export function setAuthTokenGetter(getter) {
@@ -60,14 +42,13 @@ async function buildHeaders(options = {}) {
         headers.set("Authorization", `Bearer ${token}`);
       }
     } catch {
-      // Ignore token lookup failures for public requests.
+      // Public requests should keep working even if token lookup fails.
     }
   }
 
   return headers;
 }
 
-// ── Core fetch helpers (unchanged) ──────────────────────────────
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");
@@ -90,7 +71,6 @@ export async function fetchJson(path, options = {}) {
   return parseResponse(response);
 }
 
-// ── Helper: wrap real call with mock fallback ───────────────────
 function withFallback(realFn, mockFn) {
   return async (...args) => {
     if (!USE_MOCK_FALLBACK) return realFn(...args);
@@ -98,83 +78,66 @@ function withFallback(realFn, mockFn) {
     try {
       return await realFn(...args);
     } catch {
-      // Backend unreachable or returned an error → use mock data
-      console.info("[api] Backend unavailable – serving mock data");
       return typeof mockFn === "function" ? mockFn(...args) : mockFn;
     }
   };
 }
 
-// ── Fake delay to mimic network latency for mock responses ──────
 function delay(ms = 150) {
-  return new Promise((r) => setTimeout(r, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ── Mock data adapters ──────────────────────────────────────────
-// These transform the existing mockData shapes to match what each page
-// component expects from the real API response.
+function normalizePostText(post) {
+  return post.summary || post.contentText || post.content || "";
+}
 
 function adaptPostForFeed(post) {
   return {
     ...post,
-    summary: post.content,
-    contentText: post.content,
-    profileId: post.authorHandle?.replace("@", "") || null,
-    isFollowingAuthor: false,
-    isOwnAuthor: false,
+    summary: normalizePostText(post),
+    contentText: post.contentText || post.content || "",
+    profileId: post.profileId || post.authorHandle?.replace("@", "") || null,
+    isFollowingAuthor: Boolean(post.isFollowingAuthor),
+    isOwnAuthor: Boolean(post.isOwnAuthor),
+    viewerReaction: post.viewerReaction || null,
   };
 }
 
 function adaptPostForDetail(post) {
   return {
-    ...post,
-    summary: post.content,
-    contentText: post.content,
-    content: `<p>${post.content}</p>`,
-    profileId: post.authorHandle?.replace("@", "") || null,
-    isFollowingAuthor: false,
-    isOwnAuthor: false,
-    mediaUrl: null,
-    mediaType: null,
+    ...adaptPostForFeed(post),
+    content: post.content?.startsWith?.("<")
+      ? post.content
+      : `<p>${normalizePostText(post)}</p>`,
+    mediaUrl: post.mediaUrl || null,
+    mediaType: post.mediaType || null,
   };
 }
 
 function adaptProfileForPage(profile) {
-  // Build a small set of fake follower/following lists from other profiles
-  const otherProfiles = mockProfiles.filter((p) => p.id !== profile.id);
-
-  const followersList = otherProfiles.map((p) => ({
-    id: p.id,
-    name: p.name,
-    handle: p.handle,
-    avatar: p.avatar,
-    bio: p.bio,
-    followers: p.followers,
-    postsCount: p.posts,
+  const otherProfiles = mockProfiles.filter((item) => item.id !== profile.id);
+  const followersList = otherProfiles.map((item) => ({
+    id: item.id,
+    name: item.name,
+    handle: item.handle,
+    avatar: item.avatar,
+    bio: item.bio,
+    followers: item.followers,
+    postsCount: item.posts,
     isFollowing: false,
     isOwnProfile: false,
   }));
-
-  const followingList = otherProfiles.slice(0, 2).map((p) => ({
-    id: p.id,
-    name: p.name,
-    handle: p.handle,
-    avatar: p.avatar,
-    bio: p.bio,
-    followers: p.followers,
-    postsCount: p.posts,
+  const followingList = otherProfiles.slice(0, 2).map((item) => ({
+    id: item.id,
+    name: item.name,
+    handle: item.handle,
+    avatar: item.avatar,
+    bio: item.bio,
+    followers: item.followers,
+    postsCount: item.posts,
     isFollowing: true,
     isOwnProfile: false,
   }));
-
-  // Build posts authored by this profile
-  const authorPosts = mockPosts
-    .filter(
-      (post) =>
-        post.authorHandle?.replace("@", "") === profile.id ||
-        post.avatar === profile.avatar,
-    )
-    .map(adaptPostForFeed);
 
   return {
     ...profile,
@@ -184,11 +147,50 @@ function adaptProfileForPage(profile) {
     isOwnProfile: false,
     followersList,
     followingList,
-    posts: authorPosts,
+    posts: mockPosts
+      .filter((post) => post.authorHandle?.replace("@", "") === profile.id)
+      .map(adaptPostForFeed),
   };
 }
 
-// ── Public API functions with fallbacks ──────────────────────────
+function localModerationResult({ title = "", text = "" }) {
+  const content = `${title} ${text}`.toLowerCase();
+  const flags = [];
+
+  if (/click here|buy now|guaranteed|free money/.test(content)) {
+    flags.push({
+      code: "spam_phrase",
+      label: "Spam language",
+      severity: "high",
+      confidence: 0.78,
+      description: "The draft uses phrases commonly associated with spam.",
+    });
+  }
+
+  if (/[!?]{4,}/.test(content)) {
+    flags.push({
+      code: "punctuation",
+      label: "Aggressive punctuation",
+      severity: "medium",
+      confidence: 0.61,
+      description: "Repeated punctuation can look promotional or manipulative.",
+    });
+  }
+
+  return {
+    label: flags.length ? "Needs review" : "Looks clear",
+    status: flags.length ? "review" : "clear",
+    confidence: flags.length ? 0.61 : 0.22,
+    summary: flags.length
+      ? "The local fallback found a few spam-like signals."
+      : "No strong local spam signals were detected.",
+    factCheck:
+      "This is a local fallback only. Strong claims should still be checked manually.",
+    flags,
+    fallbackUsed: true,
+    message: "AI review is unavailable, so local moderation hints are shown instead.",
+  };
+}
 
 export const getPosts = withFallback(
   () => fetchJson("/api/posts"),
@@ -243,7 +245,7 @@ export const createComment = withFallback(
   },
 );
 
-async function _deleteComment(id) {
+async function deleteCommentRequest(id) {
   const headers = await buildHeaders({ method: "DELETE" });
   const response = await fetch(`${API_BASE_URL}/api/comments/${id}`, {
     method: "DELETE",
@@ -254,9 +256,11 @@ async function _deleteComment(id) {
     let message = `Request failed with status ${response.status}`;
     try {
       const body = await response.json();
-      if (body?.error) message = body.error;
+      if (body?.error) {
+        message = body.error;
+      }
     } catch {
-      // ignore empty body
+      // Ignore empty delete responses.
     }
     throw new Error(message);
   }
@@ -265,14 +269,13 @@ async function _deleteComment(id) {
 export const deleteComment = USE_MOCK_FALLBACK
   ? async (id) => {
       try {
-        return await _deleteComment(id);
+        return await deleteCommentRequest(id);
       } catch {
-        console.info("[api] Backend unavailable – mock-deleting comment");
         await delay(100);
         mockDeleteComment(id);
       }
     }
-  : _deleteComment;
+  : deleteCommentRequest;
 
 export const createPost = withFallback(
   (payload) =>
@@ -287,7 +290,6 @@ export const createPost = withFallback(
       avatar: "YU",
       authorName: "You",
       authorHandle: "@currentuser",
-      time: "Just now",
       title: payload.title || "Untitled Post",
       content: payload.content || "",
       tags: payload.tags || [],
@@ -298,9 +300,48 @@ export const createPost = withFallback(
       views: 0,
       readTime: "1 min read",
       createdAt: new Date().toISOString(),
+      viewerReaction: null,
     };
+
     mockPosts.unshift(newPost);
     return adaptPostForFeed(newPost);
+  },
+);
+
+export const reactToPost = withFallback(
+  (postId, type) =>
+    fetchJson(`/api/posts/${postId}/reaction`, {
+      method: "POST",
+      body: JSON.stringify({ type }),
+    }),
+  async (postId, type) => {
+    await delay(120);
+    const post = mockPosts.find((item) => Number(item.id) === Number(postId));
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    const nextReaction = post.viewerReaction === type ? null : type;
+    if (post.viewerReaction === "like") {
+      post.likes = Math.max(0, (post.likes || 0) - 1);
+    }
+    if (post.viewerReaction === "dislike") {
+      post.dislikes = Math.max(0, (post.dislikes || 0) - 1);
+    }
+
+    if (nextReaction === "like") {
+      post.likes = (post.likes || 0) + 1;
+    }
+    if (nextReaction === "dislike") {
+      post.dislikes = (post.dislikes || 0) + 1;
+    }
+
+    post.viewerReaction = nextReaction;
+
+    return {
+      reaction: nextReaction,
+      post: adaptPostForFeed(post),
+    };
   },
 );
 
@@ -319,11 +360,11 @@ export async function uploadPostMedia(file) {
     return parseResponse(response);
   } catch {
     if (!USE_MOCK_FALLBACK) throw new Error("Media upload failed");
-    console.info("[api] Backend unavailable – returning mock media URL");
     await delay(400);
     return {
       url: `https://placehold.co/800x400?text=${encodeURIComponent(file.name)}`,
-      type: file.type?.startsWith("video") ? "video" : "image",
+      mediaType: file.type?.startsWith("video") ? "video" : "image",
+      mediaSource: "upload",
     };
   }
 }
@@ -336,7 +377,61 @@ export const validatePostMediaUrl = withFallback(
     }),
   async (payload) => {
     await delay(150);
-    return { valid: true, url: payload.url, type: "image" };
+    return {
+      url: payload.mediaUrl || payload.url,
+      mediaType: "image",
+      mediaSource: "url",
+    };
+  },
+);
+
+export const translatePostContent = withFallback(
+  (payload) =>
+    fetchJson("/api/ai/translate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  async (payload) => {
+    await delay(220);
+    return {
+      translatedText: payload.text || "",
+      targetLanguage: payload.targetLanguage || "English",
+      fallbackUsed: true,
+      message: "Translation service is unavailable, so the original text is shown.",
+    };
+  },
+);
+
+export const summarizePostContent = withFallback(
+  (payload) =>
+    fetchJson("/api/ai/summarize", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  async (payload) => {
+    await delay(220);
+    const text = String(payload.text || "")
+      .replace(/<[^>]*>/g, " ")
+      .trim();
+    return {
+      summary: text.split(/\.\s+/).slice(0, 2).join(". "),
+      keyPoints: [],
+      targetLanguage: payload.targetLanguage || "English",
+      fallbackUsed: true,
+      message: "Gemini is unavailable, so a short local summary is shown.",
+    };
+  },
+);
+
+export const factCheckPostContent = withFallback(
+  (payload) =>
+    fetchJson("/api/ai/fact-check", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  async (payload) => {
+    await delay(220);
+    return localModerationResult(payload);
   },
 );
 
@@ -361,15 +456,13 @@ export const getCurrentProfile = withFallback(
   () => fetchJson("/api/profiles/current"),
   async () => {
     await delay();
-    // Default to the first mock profile when not authenticated
     const profile = mockProfiles[0];
     return profile ? adaptProfileForPage(profile) : null;
   },
 );
 
 export const followProfile = withFallback(
-  (id) =>
-    fetchJson(`/api/profiles/${id}/follow`, { method: "POST" }),
+  (id) => fetchJson(`/api/profiles/${id}/follow`, { method: "POST" }),
   async (id) => {
     await delay(200);
     const profile = mockGetProfileById(id);
@@ -384,8 +477,7 @@ export const followProfile = withFallback(
 );
 
 export const unfollowProfile = withFallback(
-  (id) =>
-    fetchJson(`/api/profiles/${id}/follow`, { method: "DELETE" }),
+  (id) => fetchJson(`/api/profiles/${id}/follow`, { method: "DELETE" }),
   async (id) => {
     await delay(200);
     const profile = mockGetProfileById(id);
@@ -405,9 +497,9 @@ export const getSidebarData = withFallback(
     await delay();
     return {
       trendingTopics: mockTrendingTopics,
-      suggestions: mockSuggestions.map((s) => ({
-        ...s,
-        id: s.handle.replace("@", ""),
+      suggestions: mockSuggestions.map((item) => ({
+        ...item,
+        id: item.handle.replace("@", ""),
         isFollowing: false,
         isOwnProfile: false,
       })),
@@ -428,67 +520,36 @@ export const getDiscoverData = withFallback(
     const q = (params.q || "").toLowerCase();
     const tag = (params.tag || "").toLowerCase();
 
-    // Convert mockPosts to discover-blog shape so we can merge them
-    const postsAsBlogs = mockPosts.map((post) => ({
-      id: `post-${post.id}`,
-      title: post.title,
-      summary: post.content,
-      author: post.authorName,
-      category: post.tags?.[0] || "General",
-      views: typeof post.views === "number"
-        ? post.views >= 1000
-          ? `${(post.views / 1000).toFixed(1).replace(".0", "")}k`
-          : String(post.views)
-        : "0",
-      readTime: post.readTime || "5 min read",
-      // Keep real post ID for linking
-      _realPostId: post.id,
-    }));
-
-    // Start with dedicated discover blogs + converted posts
-    let blogs = [...mockDiscoverBlogs, ...postsAsBlogs];
+    let blogs = [...mockDiscoverBlogs];
     let creators = [...mockDiscoverCreators];
-
-    // De-duplicate by title (prefer the dedicated discover entry)
-    const seenTitles = new Set();
-    blogs = blogs.filter((b) => {
-      const key = b.title.toLowerCase();
-      if (seenTitles.has(key)) return false;
-      seenTitles.add(key);
-      return true;
-    });
 
     if (q) {
       blogs = blogs.filter(
-        (b) =>
-          b.title.toLowerCase().includes(q) ||
-          b.summary.toLowerCase().includes(q) ||
-          b.author.toLowerCase().includes(q) ||
-          b.category.toLowerCase().includes(q),
+        (item) =>
+          item.title.toLowerCase().includes(q) ||
+          item.summary.toLowerCase().includes(q) ||
+          item.author.toLowerCase().includes(q) ||
+          item.category.toLowerCase().includes(q),
       );
       creators = creators.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.note.toLowerCase().includes(q),
+        (item) =>
+          item.name.toLowerCase().includes(q) ||
+          item.note.toLowerCase().includes(q),
       );
     }
 
     if (tag) {
-      blogs = blogs.filter(
-        (b) => b.category.toLowerCase() === tag,
-      );
+      blogs = blogs.filter((item) => item.category.toLowerCase() === tag);
     }
 
     return {
-      blogs: blogs.map((b) => ({
-        ...b,
-        // Use real post ID if available (so "Read now" links work)
-        id: b._realPostId || b.id,
+      blogs: blogs.map((item) => ({
+        ...item,
         isFollowing: false,
         isOwnProfile: false,
       })),
-      creators: creators.map((c) => ({
-        ...c,
+      creators: creators.map((item) => ({
+        ...item,
         isFollowing: false,
         isOwnProfile: false,
       })),
@@ -496,3 +557,41 @@ export const getDiscoverData = withFallback(
     };
   },
 );
+
+export function connectNotificationsSocket({
+  profileId,
+  onNotification,
+  onConnect,
+  onDisconnect,
+  onError,
+}) {
+  if (!profileId) {
+    return () => {};
+  }
+
+  const socket = io(API_BASE_URL, {
+    transports: ["websocket", "polling"],
+  });
+
+  socket.on("connect", () => {
+    socket.emit("notifications:subscribe", { profileId });
+    onConnect?.();
+  });
+
+  socket.on("notifications:new", (payload) => {
+    onNotification?.(payload);
+  });
+
+  socket.on("disconnect", () => {
+    onDisconnect?.();
+  });
+
+  socket.on("connect_error", (error) => {
+    onError?.(error);
+  });
+
+  return () => {
+    socket.emit("notifications:unsubscribe", { profileId });
+    socket.disconnect();
+  };
+}

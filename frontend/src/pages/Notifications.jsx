@@ -1,12 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./Notifications.css";
-import { getNotifications as getNotificationsApi } from "../lib/api";
+import {
+  connectNotificationsSocket,
+  getCurrentProfile,
+  getNotifications as getNotificationsApi,
+} from "../lib/apiClient";
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [socketStatus, setSocketStatus] = useState("connecting");
 
   const unreadCount = useMemo(
     () => notifications.filter((notif) => !notif.read).length,
@@ -85,6 +90,26 @@ function Notifications() {
             </svg>
           </div>
         );
+      case "dislike":
+        return (
+          <div className="icon-comment">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m10 14 2-2 2 2"></path>
+              <path d="m14 10-2 2-2-2"></path>
+            </svg>
+          </div>
+        );
       default:
         return null;
     }
@@ -119,6 +144,15 @@ function Notifications() {
             )}
           </span>
         );
+      case "dislike":
+        return (
+          <span>
+            <strong>{notif.user?.name || "Someone"}</strong> disliked your story{" "}
+            {notif.target ? (
+              <span className="notification-target">{notif.target}</span>
+            ) : null}
+          </span>
+        );
       default:
         return <span>You have a new notification</span>;
     }
@@ -129,9 +163,7 @@ function Notifications() {
     type: notif?.type || "follow",
     user: {
       name: notif?.user?.name || "Ziele User",
-      avatar:
-        notif?.user?.avatar ||
-        `https://i.pravatar.cc/150?u=placeholder-${index}`,
+      avatar: notif?.user?.avatar || "ZU",
     },
     target: notif?.target || "",
     content: notif?.content || "",
@@ -164,6 +196,44 @@ function Notifications() {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  useEffect(() => {
+    let cleanup = () => {};
+    let cancelled = false;
+
+    // The page subscribes to the current profile room so new notifications
+    // appear instantly without waiting for a manual refresh.
+    getCurrentProfile()
+      .then((profile) => {
+        if (cancelled || !profile?.id) {
+          setSocketStatus("idle");
+          return;
+        }
+
+        cleanup = connectNotificationsSocket({
+          profileId: profile.id,
+          onConnect: () => setSocketStatus("live"),
+          onDisconnect: () => setSocketStatus("offline"),
+          onError: () => setSocketStatus("offline"),
+          onNotification: (payload) => {
+            setNotifications((current) => [
+              normalizeNotification(payload, Date.now()),
+              ...current,
+            ]);
+          },
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSocketStatus("offline");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
+  }, []);
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
@@ -203,6 +273,13 @@ function Notifications() {
                 {unreadCount} unread
               </span>
             ) : null}
+            <span className="status-chip">
+              {socketStatus === "live"
+                ? "Live"
+                : socketStatus === "connecting"
+                  ? "Connecting"
+                  : "Offline"}
+            </span>
 
             <button
               className="mark-read-btn notifications-refresh-btn"
@@ -255,7 +332,14 @@ function Notifications() {
                 }}
               >
                 <img
-                  src={notif.user.avatar}
+                  src={
+                    typeof notif.user.avatar === "string" &&
+                    /^https?:\/\//i.test(notif.user.avatar)
+                      ? notif.user.avatar
+                      : `https://i.pravatar.cc/150?u=${encodeURIComponent(
+                          notif.user.name,
+                        )}`
+                  }
                   alt={notif.user.name}
                   className="notification-avatar"
                 />

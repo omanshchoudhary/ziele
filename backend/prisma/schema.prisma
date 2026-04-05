@@ -51,6 +51,8 @@ model Profile {
   // One profile can have multiple posts and comments
   posts       Post[]
   comments    Comment[]
+  reactions   Reaction[]
+  reminderLogs EmailReminderLog[]
   followerLinks Follow[] @relation("ProfileFollowers")
   followingLinks Follow[] @relation("ProfileFollowing")
 }
@@ -86,6 +88,7 @@ model Post {
 
   // One post has many comments
   comments     Comment[]
+  reactions    Reaction[]
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -120,7 +123,10 @@ model Notification {
   type         String   // "like", "comment", "follow"
   sourceName   String?
   sourceHandle String?
+  sourceAvatar String?
   postTitle    String?
+  content      String?
+  metadata     Json?
   read         Boolean  @default(false)
   timestamp    DateTime @default(now())
 }
@@ -134,4 +140,33 @@ model Follow {
   following   Profile @relation("ProfileFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
+}
+
+model Reaction {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  profileId String
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, profileId])
+}
+
+model EmailReminderLog {
+  id                Int      @id @default(autoincrement())
+  profileId         String
+  email             String
+  subject           String
+  status            String
+  notificationCount Int      @default(0)
+  errorMessage      String?
+  providerMessageId String?
+  deliveredAt       DateTime?
+  createdAt         DateTime @default(now())
+
+  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { followProfile, unfollowProfile } from "../lib/api";
+import { followProfile, unfollowProfile } from "../lib/apiClient";
 
 function FollowButton({
   profileId,

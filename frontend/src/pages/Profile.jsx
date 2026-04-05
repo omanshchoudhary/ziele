@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import "../styles/profile.css";
 import "../components/PostCard.css";
-import { getCurrentProfile, getProfile } from "../lib/api";
+import { getCurrentProfile, getProfile } from "../lib/apiClient";
 import FollowButton from "../components/FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 

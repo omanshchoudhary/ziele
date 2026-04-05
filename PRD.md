@@ -292,7 +292,7 @@ Most student-level blogging systems only support create/read posts and basic com
 
 ## 10. Detailed Task Checklist (Start to End)
 
-Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integration, the profile/create/discover/notifications experiences, Express MVC routes, a starter tRPC layer, Prisma-backed post/comment/profile data access, Clerk webhook-based local user sync, integration/env scaffolding, and CI lint/build/test checks are in place. Realtime, AI feature implementation, live service credentials, production infrastructure, and several product features are still pending.
+Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integration, the profile/create/discover/notifications experiences, Express MVC routes, a starter tRPC layer, Prisma-backed post/comment/profile data access, Clerk webhook-based local user sync, AI endpoints with fallback behavior, Socket.io + Redis pub/sub notification plumbing, reaction-triggered notifications, reminder email templates and scheduler hooks, integration/env scaffolding, and CI lint/build/test checks are in place. Live third-party credentials, database migration execution for the newest Prisma models, production infrastructure, and several product features are still pending.
 
 ### 10.1 Planning and Setup
 - [x] Freeze project name, scope, and acceptance criteria.
@@ -309,8 +309,8 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [x] Setup CI checks (lint/build/test).
 
 ### 10.2 Database and Prisma
-- [ ] Design ER model for all entities (Current: a partial model is implemented in Prisma, but not the full PRD entity set).
-- [ ] Implement Prisma schema models and relations (Current: `User`, `Profile`, `Post`, `Comment`, and `Notification` are modeled).
+- [ ] Design ER model for all entities (Current: the Prisma model now also includes `Reaction` and `EmailReminderLog`, but the full PRD entity set is still not complete).
+- [ ] Implement Prisma schema models and relations (Current: `User`, `Profile`, `Post`, `Comment`, `Notification`, `Follow`, `Reaction`, and `EmailReminderLog` are modeled).
 - [ ] Add migrations for initial schema.
 - [ ] Add seed script for demo users/posts/tags (Current: local seed data files exist, but not a Prisma seed runner).
 - [ ] Add indexes on hot queries (post createdAt, tags, reactions, follow relations).
@@ -351,23 +351,23 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [x] Build communities/discover pages based on tags/topics (Discover is API-backed; Communities is still using mock data).
 
 ### 10.9 AI Features
-- [ ] Implement translation endpoint with LibreTranslate.
-- [ ] Implement summarize endpoint with Gemini + language option.
-- [ ] Implement fact-check/spam endpoint (rules + Gemini prompt).
-- [ ] Show confidence/flag labels in UI for moderation hints.
-- [ ] Add graceful fallback messaging when AI service fails.
+- [x] Implement translation endpoint with LibreTranslate.
+- [x] Implement summarize endpoint with Gemini + language option.
+- [x] Implement fact-check/spam endpoint (rules + Gemini prompt).
+- [x] Show confidence/flag labels in UI for moderation hints.
+- [x] Add graceful fallback messaging when AI service fails.
 
 ### 10.10 Notifications (Realtime)
-- [ ] Setup Socket.io server and client integration.
-- [ ] Setup Redis pub/sub channels for distributed notifications.
-- [ ] Trigger notifications on follow/comment/reaction.
-- [x] Build notifications panel and unread count UI.
+- [x] Setup Socket.io server and client integration.
+- [x] Setup Redis pub/sub channels for distributed notifications.
+- [x] Trigger notifications on follow/comment/reaction.
+ - [x] Build notifications panel and unread count UI.
 
 ### 10.11 Email Reminders
-- [ ] Create React Email templates.
-- [ ] Integrate Resend send API.
-- [ ] Add reminder scheduler logic (cron/serverless trigger).
-- [ ] Log delivery status and failures.
+- [x] Create React Email templates.
+- [x] Integrate Resend send API.
+- [x] Add reminder scheduler logic (cron/serverless trigger).
+- [x] Log delivery status and failures.
 
 ### 10.12 Gamification
 - [ ] Implement daily streak updater (once per calendar day).
@@ -385,7 +385,7 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [ ] Cache hot feeds/trending endpoints.
 - [ ] Add request validation with Zod/tRPC input parsers.
 - [ ] Add HTML/content sanitization to prevent XSS.
-- [ ] Add abuse checks for comments and post spam.
+- [ ] Add abuse checks for comments and post spam (Current: rule-based spam/fact-check hints exist, but hard enforcement middleware is still pending).
 
 ### 10.15 UI/UX and Theme
 - [x] Implement responsive layouts (mobile + desktop).

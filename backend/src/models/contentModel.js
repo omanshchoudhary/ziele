@@ -11,6 +11,21 @@ import {
   validateExternalMediaUrl,
 } from "../utils/mediaUtils.js";
 
+function buildPostInclude(viewerProfileId = null) {
+  return {
+    _count: { select: { comments: true } },
+    ...(viewerProfileId
+      ? {
+          reactions: {
+            where: { profileId: viewerProfileId },
+            select: { type: true },
+            take: 1,
+          },
+        }
+      : {}),
+  };
+}
+
 function normalizeMediaType(value = "") {
   const normalized = String(value).trim().toLowerCase();
   return normalized === "image" || normalized === "video" ? normalized : "";
@@ -67,6 +82,7 @@ function enrichPost(post, viewerProfileId, followingSet) {
     viewsLabel: formatCompactNumber(post.views || 0),
     isFollowingAuthor: Boolean(post.profileId && followingSet.has(post.profileId)),
     isOwnAuthor: Boolean(viewerProfileId && post.profileId === viewerProfileId),
+    viewerReaction: post.reactions?.[0]?.type || null,
   };
 }
 
@@ -111,7 +127,7 @@ export async function getPosts(viewerProfileId = null) {
   const [posts, followingSet] = await Promise.all([
     prisma.post.findMany({
       orderBy: { createdAt: "desc" },
-      include: { _count: { select: { comments: true } } },
+      include: buildPostInclude(viewerProfileId),
     }),
     getFollowingIdSet(viewerProfileId),
   ]);
@@ -123,7 +139,7 @@ export async function getPostById(id, viewerProfileId = null) {
   const [post, followingSet] = await Promise.all([
     prisma.post.findUnique({
       where: { id: Number(id) },
-      include: { _count: { select: { comments: true } } },
+      include: buildPostInclude(viewerProfileId),
     }),
     getFollowingIdSet(viewerProfileId),
   ]);
@@ -178,7 +194,7 @@ export async function createPost(input) {
         language: String(input.language || "English"),
         premium: Boolean(input.premium),
       },
-      include: { _count: { select: { comments: true } } },
+      include: buildPostInclude(profile.id),
     });
 
     // We keep denormalized counts on Profile so list UIs stay cheap to render.
@@ -203,7 +219,7 @@ export async function getRandomPost(viewerProfileId = null) {
     getFollowingIdSet(viewerProfileId),
     prisma.post.findFirst({
       skip: Math.floor(Math.random() * count),
-      include: { _count: { select: { comments: true } } },
+      include: buildPostInclude(viewerProfileId),
     }),
   ]);
 
@@ -226,7 +242,7 @@ export async function getRelatedPosts(postId, viewerProfileId = null) {
       },
       take: 3,
       orderBy: { likes: "desc" },
-      include: { _count: { select: { comments: true } } },
+      include: buildPostInclude(viewerProfileId),
     }),
     getFollowingIdSet(viewerProfileId),
   ]);
@@ -273,6 +289,19 @@ export async function createComment(postId, input) {
   };
 }
 
+export async function getPostOwnerProfile(postId) {
+  return prisma.post.findUnique({
+    where: { id: Number(postId) },
+    select: {
+      id: true,
+      title: true,
+      profileId: true,
+      authorName: true,
+      authorHandle: true,
+    },
+  });
+}
+
 export async function deleteCommentById(commentId) {
   try {
     await prisma.comment.delete({ where: { id: Number(commentId) } });
@@ -280,6 +309,89 @@ export async function deleteCommentById(commentId) {
   } catch {
     return false;
   }
+}
+
+export async function toggleReaction(postId, profileId, type) {
+  const normalizedType = String(type || "").trim().toLowerCase();
+  if (!["like", "dislike"].includes(normalizedType)) {
+    throw new Error("Reaction type must be like or dislike.");
+  }
+
+  const post = await prisma.post.findUnique({
+    where: { id: Number(postId) },
+    select: { id: true, profileId: true, title: true },
+  });
+
+  if (!post) {
+    throw new Error("Post not found");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.reaction.findUnique({
+      where: {
+        postId_profileId: {
+          postId: post.id,
+          profileId,
+        },
+      },
+    });
+
+    let nextReaction = normalizedType;
+    const counters = {
+      likes: 0,
+      dislikes: 0,
+    };
+
+    if (existing?.type === normalizedType) {
+      await tx.reaction.delete({
+        where: {
+          postId_profileId: {
+            postId: post.id,
+            profileId,
+          },
+        },
+      });
+      nextReaction = null;
+      counters[normalizedType === "like" ? "likes" : "dislikes"] -= 1;
+    } else if (existing) {
+      await tx.reaction.update({
+        where: {
+          postId_profileId: {
+            postId: post.id,
+            profileId,
+          },
+        },
+        data: {
+          type: normalizedType,
+        },
+      });
+      counters[existing.type === "like" ? "likes" : "dislikes"] -= 1;
+      counters[normalizedType === "like" ? "likes" : "dislikes"] += 1;
+    } else {
+      await tx.reaction.create({
+        data: {
+          postId: post.id,
+          profileId,
+          type: normalizedType,
+        },
+      });
+      counters[normalizedType === "like" ? "likes" : "dislikes"] += 1;
+    }
+
+    const updatedPost = await tx.post.update({
+      where: { id: post.id },
+      data: {
+        likes: { increment: counters.likes },
+        dislikes: { increment: counters.dislikes },
+      },
+      include: buildPostInclude(profileId),
+    });
+
+    return {
+      post: enrichPost(updatedPost, profileId, new Set()),
+      reaction: nextReaction,
+    };
+  });
 }
 
 // ==============================================================
@@ -319,7 +431,7 @@ export async function getProfileById(profileId, viewerProfileId = null) {
     prisma.post.findMany({
       where: { profileId: profile.id },
       orderBy: { createdAt: "desc" },
-      include: { _count: { select: { comments: true } } },
+      include: buildPostInclude(viewerProfileId),
     }),
     prisma.follow.findMany({
       where: { followingId: profile.id },

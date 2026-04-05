@@ -2,6 +2,7 @@ import { createClient } from "redis";
 import { env, getServiceReadinessSnapshot } from "../config/env.js";
 
 let redisClientPromise = null;
+let redisSubscriberPromise = null;
 
 export async function getRedisClient() {
   if (!getServiceReadinessSnapshot().redis.configured) {
@@ -22,6 +23,49 @@ export async function getRedisClient() {
   }
 
   return redisClientPromise;
+}
+
+export async function getRedisSubscriber() {
+  if (!getServiceReadinessSnapshot().redis.configured) {
+    return null;
+  }
+
+  if (!redisSubscriberPromise) {
+    const baseClient = await getRedisClient();
+    if (!baseClient) return null;
+
+    const subscriber = baseClient.duplicate();
+    subscriber.on("error", (error) => {
+      console.error("Redis subscriber error:", error);
+    });
+
+    redisSubscriberPromise = subscriber.connect().then(() => subscriber);
+  }
+
+  return redisSubscriberPromise;
+}
+
+export async function publishRedisMessage(channel, payload) {
+  const client = await getRedisClient().catch(() => null);
+  if (!client) return false;
+
+  await client.publish(channel, JSON.stringify(payload));
+  return true;
+}
+
+export async function subscribeRedisChannel(channel, handler) {
+  const subscriber = await getRedisSubscriber().catch(() => null);
+  if (!subscriber) return false;
+
+  await subscriber.subscribe(channel, (message) => {
+    try {
+      handler(JSON.parse(message));
+    } catch {
+      handler(message);
+    }
+  });
+
+  return true;
 }
 
 export async function pingRedis() {

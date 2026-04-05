@@ -4,9 +4,10 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import {
   createPost,
+  factCheckPostContent,
   uploadPostMedia,
   validatePostMediaUrl,
-} from "../lib/api";
+} from "../lib/apiClient";
 import MediaAttachment from "../components/MediaAttachment";
 import "../components/PostCard.css";
 import "./CreatePost.css";
@@ -59,7 +60,9 @@ function CreatePost() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [isValidatingUrl, setIsValidatingUrl] = useState(false);
+  const [isCheckingModeration, setIsCheckingModeration] = useState(false);
   const [publishedPost, setPublishedPost] = useState(null);
+  const [moderationResult, setModerationResult] = useState(null);
   const [error, setError] = useState("");
   const [mediaMessage, setMediaMessage] = useState("");
   const fileInputRef = useRef(null);
@@ -72,6 +75,7 @@ function CreatePost() {
       event.target.type === "checkbox"
         ? event.target.checked
         : event.target.value;
+    setModerationResult(null);
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -184,6 +188,7 @@ function CreatePost() {
 
       setPublishedPost(newPost);
       setForm(INITIAL_STATE);
+      setModerationResult(null);
       setMediaMessage("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -192,6 +197,26 @@ function CreatePost() {
       setError(publishError.message || "Unable to publish your post.");
     } finally {
       setIsPublishing(false);
+    }
+  };
+
+  const handleModerationCheck = async () => {
+    setIsCheckingModeration(true);
+    setError("");
+
+    try {
+      // We pass the rich text through as-is because the backend strips HTML
+      // before running local rules or Gemini prompts.
+      const result = await factCheckPostContent({
+        title: form.title,
+        text: form.content,
+        tags,
+      });
+      setModerationResult(result);
+    } catch (moderationError) {
+      setError(moderationError.message || "Unable to review this draft.");
+    } finally {
+      setIsCheckingModeration(false);
     }
   };
 
@@ -303,6 +328,54 @@ function CreatePost() {
               : mediaMessage || "No media attached"}
           </span>
         </div>
+
+        <div className="create-post-options-row">
+          <button
+            type="button"
+            className="create-post-secondary-btn"
+            onClick={handleModerationCheck}
+            disabled={isCheckingModeration}
+          >
+            {isCheckingModeration ? "Reviewing..." : "Run AI fact-check"}
+          </button>
+          <span className="create-post-label-text">
+            Uses rules first, then Gemini when available.
+          </span>
+        </div>
+
+        {moderationResult ? (
+          <section
+            className="create-post-preview-section"
+            style={{ marginTop: "0.5rem" }}
+          >
+            <h2 className="create-post-preview-title">Moderation hints</h2>
+            <div className="post-tags-container">
+              <span className="post-tag-pill">{moderationResult.label}</span>
+              <span className="post-tag-pill">
+                Confidence {Math.round((moderationResult.confidence || 0) * 100)}%
+              </span>
+              {moderationResult.fallbackUsed ? (
+                <span className="post-tag-pill">Fallback</span>
+              ) : null}
+            </div>
+            <p>{moderationResult.summary}</p>
+            <p style={{ opacity: 0.8 }}>{moderationResult.factCheck}</p>
+            <p style={{ opacity: 0.8 }}>{moderationResult.message}</p>
+            {moderationResult.flags?.length ? (
+              <div className="post-tags-container">
+                {moderationResult.flags.map((flag) => (
+                  <span key={flag.code} className="post-tag-pill">
+                    {flag.label} ({flag.severity})
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p style={{ opacity: 0.8 }}>
+                No extra warning flags were raised for this draft.
+              </p>
+            )}
+          </section>
+        ) : null}
 
         {tags.length > 0 && (
           <div className="post-tags-container">

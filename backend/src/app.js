@@ -11,7 +11,9 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import metaRoutes from "./routes/metaRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 import { createTrpcContext } from "./trpc/context.js";
 import { appRouter } from "./trpc/routers/_app.js";
@@ -38,12 +40,14 @@ app.use(express.json());
 
 // Main logical routes
 app.use("/api/health", healthRoutes);
+app.use("/api/jobs", jobRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/meta", metaRoutes);
+app.use("/api/ai", aiRoutes);
 
 // tRPC lives alongside the existing REST routes so we can migrate incrementally.
 app.use(

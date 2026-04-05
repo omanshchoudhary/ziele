@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { setAuthTokenGetter } from "../lib/api";
+import { setAuthTokenGetter } from "../lib/apiClient";
 
 function ClerkTokenBridge() {
   const { getToken } = useAuth();

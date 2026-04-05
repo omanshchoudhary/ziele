@@ -3,7 +3,7 @@ import {
   createComment,
   deleteComment,
   getPostComments,
-} from "../lib/api";
+} from "../lib/apiClient";
 import { formatCompactNumber } from "../lib/formatters";
 import "./CommentSection.css";
 

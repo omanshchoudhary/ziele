@@ -18,10 +18,11 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.6.0",
     "@clerk/express": "^2.0.8",
-    "@prisma/client": "^7.6.0",
     "@google/generative-ai": "^0.24.1",
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "^7.6.0",
+    "@react-email/render": "^2.0.5",
     "@trpc/server": "^11.5.1",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
@@ -29,10 +30,12 @@
     "express": "^4.18.2",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "redis": "^5.8.2",
     "resend": "^4.6.0",
-    "svix": "^1.90.0"
-    ,
+    "socket.io": "^4.8.3",
+    "svix": "^1.90.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

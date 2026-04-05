@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import {
+  factCheckPostContent,
   getPostById,
   getRelatedPosts,
-} from "../lib/api";
+  reactToPost,
+  summarizePostContent,
+  translatePostContent,
+} from "../lib/apiClient";
 import FollowButton from "../components/FollowButton";
 import MediaAttachment from "../components/MediaAttachment";
 import { formatCompactNumber } from "../lib/formatters";
 import CommentSection from "../components/CommentSection";
 import "../components/PostCard.css";
 import "./PostDetail.css";
+
+const AI_LANGUAGES = ["English", "Hindi", "Spanish", "French", "German"];
 
 function PostDetail() {
   const { id } = useParams();
@@ -18,6 +24,15 @@ function PostDetail() {
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [aiLanguage, setAiLanguage] = useState("English");
+  const [translatedText, setTranslatedText] = useState("");
+  const [translationMessage, setTranslationMessage] = useState("");
+  const [summaryResult, setSummaryResult] = useState(null);
+  const [moderationResult, setModerationResult] = useState(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isCheckingModeration, setIsCheckingModeration] = useState(false);
+  const [isSavingReaction, setIsSavingReaction] = useState(false);
 
   useEffect(() => {
     if (location.hash === "#comments") {
@@ -70,46 +85,114 @@ function PostDetail() {
     setLikes(post?.likes || 0);
     setDislikes(post?.dislikes || 0);
     setBookmarks(post?.bookmarks || 0);
-    setLiked(false);
-    setDisliked(false);
+    setLiked(post?.viewerReaction === "like");
+    setDisliked(post?.viewerReaction === "dislike");
     setBookmarked(false);
+    setTranslatedText("");
+    setTranslationMessage("");
+    setSummaryResult(null);
   }, [post]);
 
-  const onLike = () => {
-    if (liked) {
-      setLiked(false);
-      setLikes((prev) => Math.max(0, prev - 1));
-      return;
-    }
+  useEffect(() => {
+    if (!post) return undefined;
 
-    setLiked(true);
-    setLikes((prev) => prev + 1);
+    let cancelled = false;
+    setIsCheckingModeration(true);
 
-    if (disliked) {
-      setDisliked(false);
-      setDislikes((prev) => Math.max(0, prev - 1));
-    }
-  };
+    // We automatically request moderation hints for the reader view so the
+    // trust signals stay close to the content they describe.
+    factCheckPostContent({
+      title: post.title,
+      text: post.contentText || post.content,
+      tags: post.tags || [],
+    })
+      .then((result) => {
+        if (!cancelled) {
+          setModerationResult(result);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setModerationResult(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsCheckingModeration(false);
+        }
+      });
 
-  const onDislike = () => {
-    if (disliked) {
-      setDisliked(false);
-      setDislikes((prev) => Math.max(0, prev - 1));
-      return;
-    }
+    return () => {
+      cancelled = true;
+    };
+  }, [post]);
 
-    setDisliked(true);
-    setDislikes((prev) => prev + 1);
+  const handleReaction = async (type) => {
+    if (!post || isSavingReaction) return;
 
-    if (liked) {
-      setLiked(false);
-      setLikes((prev) => Math.max(0, prev - 1));
+    setIsSavingReaction(true);
+    try {
+      const response = await reactToPost(post.id, type);
+      if (response?.post) {
+        setPost(response.post);
+        setLikes(response.post.likes || 0);
+        setDislikes(response.post.dislikes || 0);
+        setLiked(response.reaction === "like");
+        setDisliked(response.reaction === "dislike");
+      }
+    } catch (reactionError) {
+      window.alert(reactionError.message || "Unable to save your reaction.");
+    } finally {
+      setIsSavingReaction(false);
     }
   };
 
   const onBookmark = () => {
     setBookmarked((prev) => !prev);
     setBookmarks((prev) => (bookmarked ? Math.max(0, prev - 1) : prev + 1));
+  };
+
+  const handleTranslate = async () => {
+    if (!post) return;
+
+    setIsTranslating(true);
+    try {
+      const result = await translatePostContent({
+        text: post.contentText || post.content,
+        targetLanguage: aiLanguage,
+      });
+      setTranslatedText(result.translatedText || "");
+      setTranslationMessage(result.message || "");
+    } catch (translationError) {
+      setTranslationMessage(
+        translationError.message || "Unable to translate this post right now.",
+      );
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleSummarize = async () => {
+    if (!post) return;
+
+    setIsSummarizing(true);
+    try {
+      const result = await summarizePostContent({
+        title: post.title,
+        text: post.contentText || post.content,
+        targetLanguage: aiLanguage,
+      });
+      setSummaryResult(result);
+    } catch (summaryError) {
+      setSummaryResult({
+        summary: "",
+        message: summaryError.message || "Unable to summarize this post right now.",
+        fallbackUsed: true,
+        keyPoints: [],
+      });
+    } finally {
+      setIsSummarizing(false);
+    }
   };
 
   const onShare = async () => {
@@ -207,6 +290,46 @@ function PostDetail() {
             ))}
           </div>
 
+          {moderationResult ? (
+            <div
+              style={{
+                display: "grid",
+                gap: "0.75rem",
+                marginTop: "1rem",
+                padding: "1rem",
+                borderRadius: "16px",
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.03)",
+              }}
+            >
+              <div className="post-tags-container">
+                <span className="post-tag-pill">{moderationResult.label}</span>
+                <span className="post-tag-pill">
+                  Confidence {Math.round((moderationResult.confidence || 0) * 100)}%
+                </span>
+                {moderationResult.fallbackUsed ? (
+                  <span className="post-tag-pill">Fallback</span>
+                ) : null}
+              </div>
+              <p>{moderationResult.summary}</p>
+              <p style={{ opacity: 0.8 }}>{moderationResult.factCheck}</p>
+              <p style={{ opacity: 0.8 }}>
+                {isCheckingModeration
+                  ? "Refreshing moderation hints..."
+                  : moderationResult.message}
+              </p>
+              {moderationResult.flags?.length ? (
+                <div className="post-tags-container">
+                  {moderationResult.flags.map((flag) => (
+                    <span key={flag.code} className="post-tag-pill">
+                      {flag.label} ({flag.severity})
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <MediaAttachment
             mediaUrl={post.mediaUrl}
             mediaType={post.mediaType}
@@ -224,8 +347,9 @@ function PostDetail() {
           <button
             className="action-icon-btn like-btn"
             title="Like"
-            onClick={onLike}
+            onClick={() => handleReaction("like")}
             aria-pressed={liked}
+            disabled={isSavingReaction}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -246,8 +370,9 @@ function PostDetail() {
           <button
             className="action-icon-btn dislike-btn"
             title="Dislike"
-            onClick={onDislike}
+            onClick={() => handleReaction("dislike")}
             aria-pressed={disliked}
+            disabled={isSavingReaction}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -335,6 +460,90 @@ function PostDetail() {
           </button>
         </div>
       </article>
+
+      <section
+        className="post-card"
+        style={{ display: "grid", gap: "1rem", marginTop: "1rem" }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+            alignItems: "center",
+          }}
+        >
+          <label style={{ display: "grid", gap: "0.35rem" }}>
+            <span style={{ fontSize: "0.9rem", opacity: 0.8 }}>AI language</span>
+            <select
+              value={aiLanguage}
+              onChange={(event) => setAiLanguage(event.target.value)}
+              style={{
+                minWidth: "180px",
+                padding: "0.65rem 0.85rem",
+                borderRadius: "10px",
+                background: "rgba(255,255,255,0.04)",
+                color: "inherit",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              {AI_LANGUAGES.map((language) => (
+                <option key={language} value={language}>
+                  {language}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="button"
+            className="follow-btn"
+            onClick={handleTranslate}
+            disabled={isTranslating}
+          >
+            {isTranslating ? "Translating..." : "Translate"}
+          </button>
+
+          <button
+            type="button"
+            className="follow-btn"
+            onClick={handleSummarize}
+            disabled={isSummarizing}
+          >
+            {isSummarizing ? "Summarizing..." : "Summarize"}
+          </button>
+        </div>
+
+        {translationMessage ? (
+          <p style={{ opacity: 0.8 }}>{translationMessage}</p>
+        ) : null}
+
+        {translatedText ? (
+          <div>
+            <h2 className="post-detail-related-title">Translated text</h2>
+            <p>{translatedText}</p>
+          </div>
+        ) : null}
+
+        {summaryResult ? (
+          <div>
+            <h2 className="post-detail-related-title">AI summary</h2>
+            <p>{summaryResult.summary}</p>
+            {summaryResult.message ? (
+              <p style={{ opacity: 0.8 }}>{summaryResult.message}</p>
+            ) : null}
+            {summaryResult.keyPoints?.length ? (
+              <div className="post-tags-container">
+                {summaryResult.keyPoints.map((point) => (
+                  <span key={point} className="post-tag-pill">
+                    {point}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
 
       <CommentSection postId={id} />
 

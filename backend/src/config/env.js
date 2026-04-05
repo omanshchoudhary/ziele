@@ -64,6 +64,9 @@ export const env = {
     ),
     apiKey: normalizeString(process.env.LIBRETRANSLATE_API_KEY),
   },
+  cron: {
+    sharedSecret: normalizeString(process.env.CRON_SHARED_SECRET),
+  },
 };
 
 export function getServiceReadinessSnapshot() {
@@ -103,6 +106,11 @@ export function getServiceReadinessSnapshot() {
       configured: Boolean(env.libreTranslate.apiUrl),
       message:
         "Requires a LibreTranslate base URL. API key is optional unless your host enforces one.",
+    },
+    cron: {
+      configured: isConfigured(env.cron.sharedSecret),
+      message:
+        "Optional shared secret for cron or serverless reminder trigger routes.",
     },
   };
 }

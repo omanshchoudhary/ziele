@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getPosts } from "../lib/api";
+import { getPosts, reactToPost } from "../lib/apiClient";
 import FollowButton from "../components/FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 import "../components/PostCard.css";
@@ -25,8 +25,8 @@ function Home() {
         setReactionState(
           data.reduce((acc, post) => {
             acc[post.id] = {
-              liked: false,
-              disliked: false,
+              liked: post.viewerReaction === "like",
+              disliked: post.viewerReaction === "dislike",
               bookmarked: false,
               likes: post.likes || 0,
               dislikes: post.dislikes || 0,
@@ -84,52 +84,37 @@ function Home() {
     setSearchParams(next);
   };
 
+  const syncReactionState = async (postId, type) => {
+    try {
+      const response = await reactToPost(postId, type);
+      if (!response?.post) return;
+
+      setPosts((current) =>
+        current.map((post) => (post.id === postId ? { ...post, ...response.post } : post)),
+      );
+      setReactionState((current) => ({
+        ...current,
+        [postId]: {
+          ...(current[postId] || {}),
+          liked: response.reaction === "like",
+          disliked: response.reaction === "dislike",
+          likes: response.post.likes || 0,
+          dislikes: response.post.dislikes || 0,
+          bookmarks: current[postId]?.bookmarks || response.post.bookmarks || 0,
+          bookmarked: current[postId]?.bookmarked || false,
+        },
+      }));
+    } catch (reactionError) {
+      window.alert(reactionError.message || "Unable to save your reaction.");
+    }
+  };
+
   const onLike = (postId) => {
-    setReactionState((current) => {
-      const previous = current[postId];
-      if (!previous) return current;
-
-      const next = { ...previous };
-
-      if (next.liked) {
-        next.liked = false;
-        next.likes = Math.max(0, next.likes - 1);
-      } else {
-        next.liked = true;
-        next.likes += 1;
-
-        if (next.disliked) {
-          next.disliked = false;
-          next.dislikes = Math.max(0, next.dislikes - 1);
-        }
-      }
-
-      return { ...current, [postId]: next };
-    });
+    syncReactionState(postId, "like");
   };
 
   const onDislike = (postId) => {
-    setReactionState((current) => {
-      const previous = current[postId];
-      if (!previous) return current;
-
-      const next = { ...previous };
-
-      if (next.disliked) {
-        next.disliked = false;
-        next.dislikes = Math.max(0, next.dislikes - 1);
-      } else {
-        next.disliked = true;
-        next.dislikes += 1;
-
-        if (next.liked) {
-          next.liked = false;
-          next.likes = Math.max(0, next.likes - 1);
-        }
-      }
-
-      return { ...current, [postId]: next };
-    });
+    syncReactionState(postId, "dislike");
   };
 
   const onBookmark = (postId) => {

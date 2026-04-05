@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getRandomPost } from "../lib/api";
+import { getRandomPost } from "../lib/apiClient";
 import "./FloatingPanel.css";
 
 function FloatingPanel() {

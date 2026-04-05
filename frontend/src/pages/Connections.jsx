@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getCurrentProfile, getProfile } from "../lib/api";
+import { getCurrentProfile, getProfile } from "../lib/apiClient";
 import FollowButton from "../components/FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 import "./Connections.css";

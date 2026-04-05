@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { getSidebarData } from "../lib/api";
+import { getSidebarData } from "../lib/apiClient";
 import FollowButton from "./FollowButton";
 import { formatCompactNumber } from "../lib/formatters";
 import "./Sidebar.css";
