@@ -588,7 +588,10 @@ export const getDiscoverData = withFallback(
   async (params = {}) => {
     await delay();
     const q = (params.q || "").toLowerCase();
-    const tag = (params.tag || "").toLowerCase();
+    const tagQueries = String(params.tag || "")
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
 
     const postBlogs = mockPosts.map((post) => ({
       id: post.id,
@@ -599,6 +602,7 @@ export const getDiscoverData = withFallback(
       authorHandle: post.authorHandle,
       time: post.time || "Just now",
       category: post.tags?.[0] || "General",
+      tags: post.tags || [],
       views:
         typeof post.views === "number"
           ? post.views >= 1000
@@ -634,14 +638,22 @@ export const getDiscoverData = withFallback(
       );
     }
 
-    if (tag) {
-      blogs = blogs.filter((item) => item.category.toLowerCase() === tag);
+    if (tagQueries.length > 0) {
+      blogs = blogs.filter((item) =>
+        (item.tags || []).some((tag) =>
+          tagQueries.includes(String(tag || "").trim().toLowerCase()),
+        ) || tagQueries.includes(item.category.toLowerCase()),
+      );
     }
 
     const categories = [
       "Recommended",
       ...new Set(
-        [...discoverCategories, ...blogs.map((item) => item.category)]
+        [
+          ...discoverCategories,
+          ...blogs.map((item) => item.category),
+          ...blogs.flatMap((item) => item.tags || []),
+        ]
           .filter(Boolean)
           .filter((item) => item !== "Recommended"),
       ),

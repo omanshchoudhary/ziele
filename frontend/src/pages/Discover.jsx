@@ -32,7 +32,10 @@ function Discover() {
   useEffect(() => {
     let cancelled = false;
 
-    getDiscoverData({ q: searchQueryRaw })
+    getDiscoverData({
+      q: searchQueryRaw,
+      tag: urlTags.length > 0 ? urlTags.join(",") : undefined,
+    })
       .then((data) => {
         if (!cancelled) {
           setDiscoverData(data);
@@ -48,7 +51,7 @@ function Discover() {
     return () => {
       cancelled = true;
     };
-  }, [searchQueryRaw]);
+  }, [searchQueryRaw, urlTags.join(",")]);
 
   useEffect(() => {
     if (urlTags.length === 0) {
@@ -70,15 +73,7 @@ function Discover() {
     [selectedCategories],
   );
 
-  const visibleBlogs = useMemo(() => {
-    if (activeTags.length === 0) {
-      return discoverData.blogs;
-    }
-
-    return discoverData.blogs.filter((blog) =>
-      activeTags.includes(normalizeTag(blog.category)),
-    );
-  }, [activeTags, discoverData.blogs]);
+  const visibleBlogs = useMemo(() => discoverData.blogs, [discoverData.blogs]);
 
   const updateParams = (updater) => {
     const next = new URLSearchParams(searchParams);

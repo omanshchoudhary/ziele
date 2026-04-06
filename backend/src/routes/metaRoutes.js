@@ -14,7 +14,7 @@ import { validateQuery } from "../middleware/validateRequest.js";
 const router = express.Router();
 const discoverQuerySchema = z.object({
   q: z.string().trim().max(120).optional(),
-  tag: z.string().trim().max(60).optional(),
+  tag: z.string().trim().max(240).optional(),
 });
 const listQuerySchema = discoverQuerySchema.extend({
   limit: z.coerce.number().int().min(1).max(50).optional(),

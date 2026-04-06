@@ -124,10 +124,10 @@ export const mockNotifications = [
 ];
 
 export const mockTrendingTopics = [
-  { topic: "Technology", posts: 125000, tag: "#FutureTech" },
-  { topic: "Programming", posts: 82000, tag: "#JavaScript" },
-  { topic: "Design", posts: 45000, tag: "#WebDesign" },
-  { topic: "Business", posts: 30000, tag: "#Startup" },
+  { topic: "Technology", posts: 1280, tag: "#FutureTech" },
+  { topic: "Programming", posts: 940, tag: "#JavaScript" },
+  { topic: "Design", posts: 710, tag: "#WebDesign" },
+  { topic: "Business", posts: 560, tag: "#Startup" },
 ];
 
 export const mockSuggestions = [

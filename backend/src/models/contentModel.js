@@ -60,10 +60,10 @@ function formatConnectionProfile(profile, viewerProfileId, followingSet) {
     handle: profile.handle,
     bio: profile.bio,
     avatar: profile.avatar,
-    followers: profile.followers,
-    following: profile.following,
-    postsCount: profile.postsCount,
-    likes: profile.likes,
+    followers: profile.followersCount ?? profile.followers,
+    following: profile.followingCount ?? profile.following,
+    postsCount: profile.postsTotal ?? profile.postsCount,
+    likes: profile.likesTotal ?? profile.likes,
     streak: profile.streak,
     isPremium: profile.isPremium,
     joined: profile.joined,
@@ -840,6 +840,9 @@ export async function getProfileById(profileId, viewerProfileId = null) {
     ...formatConnectionProfile(profile, viewerProfileId, followingSet),
     posts: posts.map((post) => enrichPost(post, viewerProfileId, followingSet)),
     postsTotal: posts.length,
+    followers: followerLinks.length,
+    following: followingLinks.length,
+    likes: posts.reduce((sum, post) => sum + (post.likes || 0), 0),
     followersList: followerLinks.map((link) =>
       formatConnectionProfile(link.follower, viewerProfileId, followingSet),
     ),
@@ -974,18 +977,21 @@ export async function getSidebarData(viewerProfileId = null) {
   const tagCounts = new Map();
   posts.forEach((post) => {
     post.tags.forEach((tag) => {
-      const current = tagCounts.get(tag) || 0;
+      const current = tagCounts.get(tag) || { score: 0, posts: 0 };
       const score = scorePostForTrending(post, post._count?.comments || 0);
-      tagCounts.set(tag, current + score);
+      tagCounts.set(tag, {
+        score: current.score + score,
+        posts: current.posts + 1,
+      });
     });
   });
 
   const trendingTopics = [...tagCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1].score - a[1].score)
     .slice(0, 4)
-    .map(([topic, score]) => ({
+    .map(([topic, metrics]) => ({
       topic,
-      posts: score,
+      posts: metrics.posts,
       tag: `#${topic.replace(/\s+/g, "")}`,
     }));
 
@@ -1414,8 +1420,18 @@ export async function getAnalyticsData(profileId, query = {}) {
 }
 
 export async function getDiscoverData(query = {}, viewerProfileId = null) {
-  const [recommendedPosts, dbProfiles, followingSet] = await Promise.all([
-    getRecommendationsData(viewerProfileId, { limit: 40 }),
+  const tagQueries = String(query.tag || "")
+    .split(",")
+    .map((tag) => normalizeTag(tag).toLowerCase())
+    .filter(Boolean);
+  const search = String(query.q || "").trim().toLowerCase();
+
+  const [posts, dbProfiles, followingSet] = await Promise.all([
+    prisma.post.findMany({
+      include: buildPostInclude(viewerProfileId),
+      orderBy: { createdAt: "desc" },
+      take: 160,
+    }),
     prisma.profile.findMany({
       where: viewerProfileId ? { id: { not: viewerProfileId } } : undefined,
       orderBy: { followers: "desc" },
@@ -1424,10 +1440,14 @@ export async function getDiscoverData(query = {}, viewerProfileId = null) {
     getFollowingIdSet(viewerProfileId),
   ]);
 
+  const enrichedPosts = posts.map((post) =>
+    enrichPost(post, viewerProfileId, followingSet),
+  );
+
   const categories = [
     "Recommended",
     ...new Set(
-      recommendedPosts
+      enrichedPosts
         .flatMap((post) => post.tags || [])
         .map((tag) => normalizeTag(tag))
         .filter(Boolean),
@@ -1446,10 +1466,7 @@ export async function getDiscoverData(query = {}, viewerProfileId = null) {
     isOwnProfile: Boolean(viewerProfileId && viewerProfileId === profile.id),
   }));
 
-  const tagQuery = normalizeTag(query.tag || "").toLowerCase();
-  const search = String(query.q || "").trim().toLowerCase();
-
-  const blogs = recommendedPosts
+  const blogs = enrichedPosts
     .map((post) => ({
       id: post.id,
       profileId: post.profileId,
@@ -1459,6 +1476,7 @@ export async function getDiscoverData(query = {}, viewerProfileId = null) {
       authorHandle: post.authorHandle,
       time: post.time,
       category: post.tags?.[0] || "Recommended",
+      tags: post.tags || [],
       views: formatCompactNumber(post.views || 0),
       readTime: post.readTime,
       isFollowingAuthor: post.isFollowingAuthor,
@@ -1471,10 +1489,14 @@ export async function getDiscoverData(query = {}, viewerProfileId = null) {
         blog.title.toLowerCase().includes(search) ||
         blog.summary.toLowerCase().includes(search) ||
         blog.author.toLowerCase().includes(search) ||
-        blog.category.toLowerCase().includes(search);
+        blog.category.toLowerCase().includes(search) ||
+        blog.tags.some((tag) => normalizeTag(tag).toLowerCase().includes(search));
 
       const matchesTag =
-        !tagQuery || normalizeTag(blog.category).toLowerCase() === tagQuery;
+        tagQueries.length === 0 ||
+        blog.tags.some((tag) =>
+          tagQueries.includes(normalizeTag(tag).toLowerCase()),
+        );
 
       return matchesSearch && matchesTag;
     });
