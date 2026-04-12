@@ -20,12 +20,14 @@ import { appRouter } from "./trpc/routers/_app.js";
 
 const app = express();
 
-// We keep CORS permissive in early setup, but prefer explicit origins once env values are added.
+// Updated CORS configuration for development and production
 app.use(
   cors({
-    origin:
-      env.corsOrigins.length > 0 ? env.corsOrigins : true,
-    credentials: true,
+    origin: [
+      "http://localhost:5173", // Development frontend
+      "https://ziele-theta.vercel.app", // Production frontend
+    ],
+    credentials: true, // Enable credentials for cookies/auth headers
   }),
 );
 
