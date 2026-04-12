@@ -40,6 +40,8 @@ export const env = {
   },
   redis: {
     url: normalizeString(process.env.REDIS_URL),
+    upstashRestUrl: normalizeString(process.env.UPSTASH_REDIS_REST_URL),
+    upstashRestToken: normalizeString(process.env.UPSTASH_REDIS_REST_TOKEN),
     rateLimitPrefix: normalizeString(
       process.env.REDIS_RATE_LIMIT_PREFIX,
       "ziele:ratelimit",
@@ -83,8 +85,12 @@ export function getServiceReadinessSnapshot() {
       message: "Requires a PostgreSQL DATABASE_URL for Prisma.",
     },
     redis: {
-      configured: isConfigured(env.redis.url),
-      message: "Requires a REDIS_URL for cache, pub/sub, and rate limiting.",
+      configured:
+        isConfigured(env.redis.url) ||
+        (isConfigured(env.redis.upstashRestUrl) &&
+          isConfigured(env.redis.upstashRestToken)),
+      message:
+        "Requires REDIS_URL, or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN for cache and rate limiting.",
     },
     cloudinary: {
       configured:

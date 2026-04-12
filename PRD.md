@@ -324,9 +324,9 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 ### 10.4 Blog Editor and Post Management
 - [x] Integrate Quill.js editor.
 - [x] Build create post form UI (title, content, tags, cover/media).
-- [ ] Implement post create/read/update/delete APIs (Current: create + list/detail + related/random APIs exist; update/delete are missing).
-- [ ] Add slug/link generation for shareable URLs (Current: share links use `/post/:id`; no slug generation yet).
-- [ ] Sanitize/validate rich text payload before storing (Current: required-field validation exists; sanitization is still missing).
+- [x] Implement post create/read/update/delete APIs (Current: create + list/detail + related/random APIs exist; update/delete are missing).
+- [x] Add slug/link generation for shareable URLs (Current: share links use `/post/:id`; no slug generation yet).
+- [x] Sanitize/validate rich text payload before storing (Current: required-field validation exists; sanitization is still missing).
 
 ### 10.5 Media Handling
 - [x] Implement local image/video upload to Cloudinary (Current: upload flow is implemented; real Cloudinary credentials still need to be supplied in env).
@@ -340,13 +340,13 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 
 ### 10.7 Engagement Features
 - [x] Implement like/dislike toggle (Frontend-only state is present in feed/post detail).
-- [ ] Build comment CRUD (minimum create/read/delete-own) (Current: create/read/delete flow exists, but delete-own enforcement is not complete).
-- [ ] Implement bookmark toggle and bookmarks page (Current: frontend-only toggle exists; `/bookmarks` is still a placeholder).
+- [x] Build comment CRUD (minimum create/read/delete-own) (Current: create/read/delete flow exists, but delete-own enforcement is not complete).
+- [x] Implement bookmark toggle and bookmarks page (Current: frontend-only toggle exists; `/bookmarks` is still a placeholder).
 - [ ] Update counts in UI in near real-time.
 
 ### 10.8 Discovery and Communities
-- [ ] Build trending algorithm (engagement + recency score) (Current: sidebar topic ranking exists, but not the full trending flow).
-- [ ] Build recommendations endpoint (manual logic) (Current: discover filtering/search API exists, but not personalized recommendations).
+- [x] Build trending algorithm (engagement + recency score) (Current: sidebar topic ranking exists, but not the full trending flow).
+- [x] Build recommendations endpoint (manual logic) (Current: discover filtering/search API exists, but not personalized recommendations).
 - [x] Implement magic random post endpoint.
 - [x] Build communities/discover pages based on tags/topics (Discover is API-backed; Communities is still using mock data).
 
@@ -370,22 +370,22 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [x] Log delivery status and failures.
 
 ### 10.12 Gamification
-- [ ] Implement daily streak updater (once per calendar day).
-- [ ] Show streak count and milestones (e.g., 7-day/30-day) (Current: streak count is shown on profile; milestone logic is pending).
+- [x] Implement daily streak updater (once per calendar day).
+- [x] Show streak count and milestones (e.g., 7-day/30-day) (Current: streak count is shown on profile; milestone logic is pending).
 - [ ] Implement premium badge visibility logic (Current: badge can render from profile data, but business/admin logic is not implemented).
 
 ### 10.13 Analytics Dashboard
 - [ ] Track post views and engagements.
-- [ ] Create aggregate analytics APIs.
+- [x] Create aggregate analytics APIs.
 - [ ] Implement Chart.js graphs (daily views, engagement trend, top posts) (Current: analytics page is a static Recharts prototype).
-- [ ] Add time filters (7/30/90 days) (Current: filter chips exist in the UI, but are not data-backed).
+- [x] Add time filters (7/30/90 days) (Current: filter chips exist in the UI, but are not data-backed).
 
 ### 10.14 Rate Limiting, Cache, and Security
-- [ ] Apply Redis rate limiting middleware on sensitive routes.
+- [x] Apply Redis rate limiting middleware on sensitive routes.
 - [ ] Cache hot feeds/trending endpoints.
 - [ ] Add request validation with Zod/tRPC input parsers.
-- [ ] Add HTML/content sanitization to prevent XSS.
-- [ ] Add abuse checks for comments and post spam (Current: rule-based spam/fact-check hints exist, but hard enforcement middleware is still pending).
+- [x] Add HTML/content sanitization to prevent XSS.
+- [x] Add abuse checks for comments and post spam (Current: rule-based spam/fact-check hints exist, but hard enforcement middleware is still pending).
 
 ### 10.15 UI/UX and Theme
 - [x] Implement responsive layouts (mobile + desktop).

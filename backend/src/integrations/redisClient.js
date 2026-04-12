@@ -4,22 +4,91 @@ import { env, getServiceReadinessSnapshot } from "../config/env.js";
 let redisClientPromise = null;
 let redisSubscriberPromise = null;
 
+function hasUpstashRestConfig() {
+  return Boolean(env.redis.upstashRestUrl && env.redis.upstashRestToken);
+}
+
+async function runUpstashCommand(command = []) {
+  if (!hasUpstashRestConfig()) {
+    throw new Error("Upstash REST credentials are not configured.");
+  }
+
+  const response = await fetch(env.redis.upstashRestUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.redis.upstashRestToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(command),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upstash REST request failed with status ${response.status}.`);
+  }
+
+  const payload = await response.json();
+  if (payload?.error) {
+    throw new Error(`Upstash error: ${payload.error}`);
+  }
+
+  return payload?.result;
+}
+
+function toSafeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function createUpstashRestClient() {
+  return {
+    incr: async (key) =>
+      toSafeNumber(await runUpstashCommand(["INCR", String(key)]), 0),
+    expire: async (key, seconds) =>
+      toSafeNumber(
+        await runUpstashCommand([
+          "EXPIRE",
+          String(key),
+          String(Math.max(1, Number(seconds || 1))),
+        ]),
+        0,
+      ),
+    ttl: async (key) =>
+      toSafeNumber(await runUpstashCommand(["TTL", String(key)]), -1),
+    ping: async () => String(await runUpstashCommand(["PING"])),
+    publish: async (channel, message) =>
+      toSafeNumber(
+        await runUpstashCommand([
+          "PUBLISH",
+          String(channel),
+          String(message ?? ""),
+        ]),
+        0,
+      ),
+  };
+}
+
 export async function getRedisClient() {
   if (!getServiceReadinessSnapshot().redis.configured) {
     return null;
   }
 
   if (!redisClientPromise) {
-    const client = createClient({
-      url: env.redis.url,
-    });
+    if (env.redis.url) {
+      const client = createClient({
+        url: env.redis.url,
+      });
 
-    client.on("error", (error) => {
-      console.error("Redis client error:", error);
-    });
+      client.on("error", (error) => {
+        console.error("Redis client error:", error);
+      });
 
-    // We store the connection promise so repeated callers reuse the same client.
-    redisClientPromise = client.connect().then(() => client);
+      // We store the connection promise so repeated callers reuse the same client.
+      redisClientPromise = client.connect().then(() => client);
+    } else if (hasUpstashRestConfig()) {
+      redisClientPromise = Promise.resolve(createUpstashRestClient());
+    } else {
+      redisClientPromise = Promise.resolve(null);
+    }
   }
 
   return redisClientPromise;
@@ -31,6 +100,12 @@ export async function getRedisSubscriber() {
   }
 
   if (!redisSubscriberPromise) {
+    // Upstash REST is stateless HTTP and does not support long-lived SUBSCRIBE streams.
+    if (!env.redis.url) {
+      redisSubscriberPromise = Promise.resolve(null);
+      return redisSubscriberPromise;
+    }
+
     const baseClient = await getRedisClient();
     if (!baseClient) return null;
 
@@ -50,6 +125,13 @@ export async function publishRedisMessage(channel, payload) {
   if (!client) return false;
 
   await client.publish(channel, JSON.stringify(payload));
+
+  // With Upstash REST there is no long-lived SUBSCRIBE bridge, so callers
+  // should still execute their local fallback emitter path.
+  if (!env.redis.url && hasUpstashRestConfig()) {
+    return false;
+  }
+
   return true;
 }
 
@@ -85,7 +167,7 @@ export async function pingRedis() {
     const result = await client.ping();
     return {
       configured: true,
-      ok: result === "PONG",
+      ok: String(result).toUpperCase() === "PONG",
       message: `Redis responded with ${result}.`,
     };
   } catch (error) {
