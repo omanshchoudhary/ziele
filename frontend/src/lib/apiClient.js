@@ -839,3 +839,36 @@ export function connectNotificationsSocket({
     socket.disconnect();
   };
 }
+
+export const updateCurrentProfile = withFallback(
+  (data) => fetchJson("/api/profile/current", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  }),
+  async (data) => {
+    await delay();
+    return { ...mockGetProfileById("user"), ...data };
+  }
+);
+
+export const getDrafts = async () => {
+  const drafts = localStorage.getItem("ziele_drafts");
+  if (drafts) {
+    return JSON.parse(drafts);
+  }
+  return [];
+};
+
+export const saveDraft = async (draft) => {
+  const drafts = await getDrafts();
+  const existingIndex = drafts.findIndex(d => d.id === draft.id);
+  
+  if (existingIndex >= 0) {
+    drafts[existingIndex] = { ...drafts[existingIndex], ...draft, lastEdited: new Date().toISOString() };
+  } else {
+    drafts.push({ ...draft, id: `draft-${Date.now()}`, lastEdited: new Date().toISOString() });
+  }
+  
+  localStorage.setItem("ziele_drafts", JSON.stringify(drafts));
+  return drafts;
+};

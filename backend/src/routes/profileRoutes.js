@@ -3,6 +3,7 @@ import {
   followProfile,
   getAllProfiles,
   getCurrentProfile,
+  updateCurrentProfile,
   getProfile,
   unfollowProfile,
 } from "../controllers/profileController.js";
@@ -24,6 +25,13 @@ router.get(
   requireAuthWithContext,
   requireUserId,
   getCurrentProfile,
+);
+
+router.put(
+  "/current",
+  requireAuthWithContext,
+  requireUserId,
+  updateCurrentProfile,
 );
 
 router.post(

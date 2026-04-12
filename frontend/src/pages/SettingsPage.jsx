@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getCurrentProfile, updateCurrentProfile } from "../lib/apiClient";
 import "./SettingsPage.css";
 
 /* ── Mock settings state ──────────────────────────────────────── */
@@ -51,15 +52,46 @@ function SettingsPage() {
   const [activeSection, setActiveSection] = useState("profile");
   const [settings, setSettings] = useState(initialSettings);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentProfile()
+      .then((profile) => {
+        if (!cancelled && profile) {
+          setSettings((prev) => ({
+            ...prev,
+            displayName: profile.name || prev.displayName,
+            username: profile.handle || prev.username,
+            bio: profile.bio || prev.bio,
+          }));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const updateSetting = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setSaved(false);
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      await updateCurrentProfile({
+        name: settings.displayName,
+        handle: settings.username,
+        bio: settings.bio,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("Failed to save settings", error);
+    }
   };
 
   const renderToggle = (key, label, desc) => (

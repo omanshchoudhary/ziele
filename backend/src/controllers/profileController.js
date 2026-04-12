@@ -113,3 +113,40 @@ export const unfollowProfile = async (req, res) => {
     });
   }
 };
+
+export const updateCurrentProfile = async (req, res) => {
+  try {
+    const authProfile = await resolveAuthProfile(req);
+    if (!authProfile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+
+    const { name, bio, handle } = req.body;
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+
+    // Check if handle is taken by another user
+    if (handle && handle !== authProfile.handle) {
+      const existing = await prisma.profile.findFirst({
+        where: { handle }
+      });
+      if (existing) {
+        return res.status(400).json({ error: "Username already taken" });
+      }
+    }
+
+    const updated = await prisma.profile.update({
+      where: { id: authProfile.id },
+      data: {
+        name: name !== undefined ? name : authProfile.name,
+        bio: bio !== undefined ? bio : authProfile.bio,
+        handle: handle !== undefined ? handle : authProfile.handle,
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Failed to update profile", error);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+};
