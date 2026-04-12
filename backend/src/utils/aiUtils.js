@@ -1,8 +1,14 @@
 import { geminiClient } from "../integrations/geminiClient.js";
 import { translateWithLibreTranslate } from "../integrations/libreTranslateClient.js";
+import { env } from "../config/env.js";
 import { stripHtml } from "./contentUtils.js";
 
-const SUMMARY_MODEL = "gemini-1.5-flash";
+const DEFAULT_GEMINI_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+];
 
 const LANGUAGE_CODE_MAP = {
   arabic: "ar",
@@ -47,6 +53,32 @@ function splitSentences(text) {
 function normalizeLanguageCode(language = "English") {
   const key = String(language || "").trim().toLowerCase();
   return LANGUAGE_CODE_MAP[key] || key || "en";
+}
+
+function dedupeTruthyStrings(values = []) {
+  const seen = new Set();
+  const result = [];
+
+  for (const value of values) {
+    const normalized = String(value || "").trim();
+    if (!normalized) continue;
+
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    result.push(normalized);
+  }
+
+  return result;
+}
+
+function resolveGeminiModelCandidates() {
+  return dedupeTruthyStrings([
+    env.gemini.model,
+    ...(env.gemini.fallbackModels || []),
+    ...DEFAULT_GEMINI_MODELS,
+  ]);
 }
 
 function buildFallbackSummary(text, sentenceCount = 2) {
@@ -160,22 +192,93 @@ function summarizeHeuristics(flags = []) {
   };
 }
 
+function extractJsonText(rawText = "") {
+  const text = String(rawText || "").trim();
+  if (!text) {
+    throw new Error("Gemini returned an empty response.");
+  }
+
+  // Direct JSON payload.
+  if (text.startsWith("{") && text.endsWith("}")) {
+    return text;
+  }
+
+  // Markdown fenced JSON block.
+  const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
+
+  // Best-effort object extraction.
+  const jsonStart = text.indexOf("{");
+  const jsonEnd = text.lastIndexOf("}");
+  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+    return text.slice(jsonStart, jsonEnd + 1);
+  }
+
+  throw new Error("Gemini returned a non-JSON response.");
+}
+
+function shouldTryNextGeminiModel(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("not found") ||
+    message.includes("is not supported for generatecontent") ||
+    message.includes("quota exceeded") ||
+    message.includes("too many requests") ||
+    message.includes("resource exhausted")
+  );
+}
+
+function buildGeminiFallbackMessage(error) {
+  const message = String(error?.message || "");
+  if (/not configured/i.test(message)) {
+    return "Gemini is not configured yet, so a local fallback result is shown.";
+  }
+  if (/api key.+not valid|api[_\s-]?key/i.test(message)) {
+    return "Gemini API key is invalid or expired, so a local fallback result is shown.";
+  }
+  if (/not found|not supported for generatecontent/i.test(message)) {
+    return "The configured Gemini model is unavailable, so a local fallback result is shown.";
+  }
+
+  return "Gemini is unavailable right now, so a local fallback result is shown.";
+}
+
+function buildLibreTranslateFallbackMessage(error) {
+  const message = String(error?.message || "");
+  if (/api key/i.test(message) && /libretranslate/i.test(message)) {
+    return "LibreTranslate requires an API key on this host. Add LIBRETRANSLATE_API_KEY to enable live translation.";
+  }
+
+  return "Translation is unavailable right now, so the original text is shown as a fallback.";
+}
+
 async function runGeminiJsonPrompt(prompt) {
   if (!geminiClient) {
     throw new Error("Gemini is not configured.");
   }
 
-  const model = geminiClient.getGenerativeModel({ model: SUMMARY_MODEL });
-  const result = await model.generateContent(prompt);
-  const text = result.response.text().trim();
-  const jsonStart = text.indexOf("{");
-  const jsonEnd = text.lastIndexOf("}");
+  const modelCandidates = resolveGeminiModelCandidates();
+  let lastError = null;
 
-  if (jsonStart === -1 || jsonEnd === -1) {
-    throw new Error("Gemini returned a non-JSON response.");
+  for (const modelName of modelCandidates) {
+    try {
+      const model = geminiClient.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      return JSON.parse(extractJsonText(text));
+    } catch (error) {
+      lastError = error;
+      if (shouldTryNextGeminiModel(error)) {
+        continue;
+      }
+
+      throw error;
+    }
   }
 
-  return JSON.parse(text.slice(jsonStart, jsonEnd + 1));
+  throw lastError || new Error("No compatible Gemini model is available.");
 }
 
 export async function translateContent({
@@ -209,14 +312,42 @@ export async function translateContent({
       fallbackUsed: false,
       message: `Translated with LibreTranslate to ${targetLanguage}.`,
     };
-  } catch {
+  } catch (error) {
+    try {
+      const response = await runGeminiJsonPrompt(`
+Return valid JSON only.
+Translate the following text into ${targetLanguage}.
+Keep the meaning and tone, and avoid adding extra commentary.
+If the text is already in the requested language, return it as-is.
+
+JSON shape:
+{
+  "translatedText": "string",
+  "detectedLanguage": "string"
+}
+
+Source language hint: ${sourceLanguage}
+Content:
+${normalizedText}
+`);
+
+      return {
+        translatedText: response.translatedText || normalizedText,
+        detectedLanguage: response.detectedLanguage || sourceLanguage,
+        targetLanguage,
+        fallbackUsed: false,
+        message: `Translated with Gemini to ${targetLanguage} because LibreTranslate is unavailable.`,
+      };
+    } catch {
+      // If both translators fail, we keep a deterministic local fallback below.
+    }
+
     return {
       translatedText: normalizedText,
       detectedLanguage: sourceLanguage,
       targetLanguage,
       fallbackUsed: true,
-      message:
-        "Translation is unavailable right now, so the original text is shown as a fallback.",
+      message: buildLibreTranslateFallbackMessage(error),
     };
   }
 }
@@ -262,13 +393,12 @@ ${normalizedText}
       message: `Summary generated in ${targetLanguage}.`,
       targetLanguage,
     };
-  } catch {
+  } catch (error) {
     return {
       summary: fallbackSummary,
       keyPoints: splitSentences(fallbackSummary).slice(0, 3),
       fallbackUsed: true,
-      message:
-        "Gemini is unavailable right now, so a simple extractive summary is shown instead.",
+      message: buildGeminiFallbackMessage(error),
       targetLanguage,
     };
   }
@@ -346,12 +476,12 @@ ${normalizedText}
           ? "Moderation hints combine local rules and Gemini review."
           : "Gemini did not find notable moderation issues.",
     };
-  } catch {
+  } catch (error) {
     return {
       ...heuristicSummary,
       flags: heuristicFlags,
       factCheck:
-        "Gemini is unavailable right now, so this result is based only on local spam and certainty rules.",
+        `${buildGeminiFallbackMessage(error)} This result is based only on local spam and certainty rules.`,
       fallbackUsed: true,
       message:
         "AI review is unavailable right now. Showing rule-based moderation hints instead.",

@@ -57,7 +57,9 @@ export const env = {
     fromEmail: normalizeString(process.env.RESEND_FROM_EMAIL),
   },
   gemini: {
-    apiKey: normalizeString(process.env.GEMINI_API_KEY),
+    apiKey: normalizeString(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+    model: normalizeString(process.env.GEMINI_MODEL, "gemini-2.5-flash"),
+    fallbackModels: parseCsv(process.env.GEMINI_FALLBACK_MODELS),
   },
   libreTranslate: {
     apiUrl: normalizeString(
