@@ -319,7 +319,7 @@ function CreatePost() {
             it surfaces cleanly across the product.
           </p>
         </div>
-        <Link to="/" className="back-btn">
+        <Link to="/feed" className="back-btn">
           Back to Home
         </Link>
       </header>

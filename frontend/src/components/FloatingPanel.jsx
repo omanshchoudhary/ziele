@@ -13,12 +13,12 @@ function FloatingPanel() {
     try {
       const randomPost = await getRandomPost();
       if (!randomPost) {
-        navigate("/");
+        navigate("/feed");
         return;
       }
       navigate(`/post/${randomPost.id}`);
     } catch {
-      navigate("/");
+      navigate("/feed");
     }
   }, [navigate]);
 

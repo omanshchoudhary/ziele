@@ -4,7 +4,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/clerk-react";
 import "./Navbar.css";
 
-const SEARCHABLE_PATHS = ["/", "/discover", "/communities"];
+const SEARCHABLE_PATHS = ["/feed", "/discover", "/communities"];
 
 function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -67,7 +67,7 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
 
   return (
     <nav className="navbar" role="navigation" aria-label="Primary">
-      <Link to="/" className="nav-brand" aria-label="Ziele home">
+      <Link to="/feed" className="nav-brand" aria-label="Ziele home">
         Ziele
       </Link>
 
@@ -151,7 +151,7 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
         </button>
 
         <NavLink
-          to="/"
+          to="/feed"
           end
           className={getNavLinkClass}
           title="Home"

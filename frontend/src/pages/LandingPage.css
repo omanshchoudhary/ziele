@@ -1,0 +1,419 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap");
+
+.landing-page {
+    --landing-glow: color-mix(in srgb, var(--primary) 48%, transparent);
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 12% 18%, var(--primary-soft), transparent 42%),
+        radial-gradient(circle at 84% 18%, rgba(96, 165, 250, 0.18), transparent 40%),
+        radial-gradient(circle at 60% 78%, rgba(255, 92, 157, 0.14), transparent 48%),
+        linear-gradient(130deg, var(--bg-obsidian), color-mix(in srgb, var(--bg-card) 84%, #050507));
+    color: var(--text-main);
+    font-family: "Space Grotesk", "Inter", sans-serif;
+}
+
+.landing-bg-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 38px 38px;
+    mask-image: radial-gradient(circle at center, black 34%, transparent 92%);
+}
+
+.landing-topbar {
+    position: relative;
+    z-index: 3;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 1.2rem clamp(1rem, 3vw, 2.5rem) 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.landing-brand {
+    display: grid;
+    gap: 0.2rem;
+    font-size: clamp(1.35rem, 2.2vw, 2rem);
+    font-family: "Sora", "Space Grotesk", sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.landing-brand span {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-soft);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.landing-theme-toggle {
+    border: 1px solid var(--glass-border-strong);
+    background: color-mix(in srgb, var(--bg-card-2) 62%, transparent);
+    color: var(--text-main);
+    border-radius: 999px;
+    padding: 0.5rem 0.95rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.landing-main {
+    position: relative;
+    z-index: 2;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 1rem clamp(1rem, 3vw, 2.5rem) 2.5rem;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: clamp(1.4rem, 3vw, 3.2rem);
+    align-items: center;
+}
+
+.landing-copy {
+    display: grid;
+    gap: 1rem;
+}
+
+.landing-eyebrow {
+    margin: 0;
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--primary) 74%, var(--text-main));
+}
+
+.landing-copy h1 {
+    margin: 0;
+    font-family: "Sora", "Space Grotesk", sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    font-size: clamp(2rem, 5vw, 4.15rem);
+    line-height: 1.06;
+    max-width: 16ch;
+    text-wrap: balance;
+}
+
+.landing-description {
+    margin: 0;
+    color: var(--text-soft);
+    max-width: 58ch;
+    font-size: clamp(0.98rem, 1.25vw, 1.18rem);
+}
+
+.landing-options {
+    margin-top: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.landing-option-card {
+    border-radius: 20px;
+    padding: 1rem;
+    border: 1px solid var(--glass-border);
+    background: color-mix(in srgb, var(--bg-card) 74%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transform-style: preserve-3d;
+    transition:
+        transform 0.28s ease,
+        border-color 0.28s ease,
+        box-shadow 0.28s ease;
+}
+
+.landing-option-card:hover {
+    transform: translateY(-4px) rotateX(6deg);
+    border-color: color-mix(in srgb, var(--primary) 42%, var(--glass-border));
+    box-shadow: 0 18px 38px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.landing-option-card h2 {
+    margin: 0;
+    font-size: 1.06rem;
+    font-family: "Sora", "Space Grotesk", sans-serif;
+}
+
+.landing-option-card p {
+    margin: 0.46rem 0 0.8rem;
+    color: var(--text-soft);
+    font-size: 0.92rem;
+}
+
+.landing-option-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    border-radius: 12px;
+    padding: 0.64rem 0.8rem;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    transition:
+        transform 0.2s ease,
+        filter 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.landing-option-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+.landing-option-btn.primary {
+    color: #fff;
+    background: linear-gradient(130deg, var(--primary-strong), var(--primary));
+}
+
+.landing-option-btn.secondary {
+    color: var(--text-main);
+    border-color: var(--glass-border-strong);
+    background: color-mix(in srgb, var(--bg-card-2) 88%, transparent);
+}
+
+.landing-visual {
+    perspective: 1300px;
+}
+
+.landing-stage {
+    --stage-tilt-x: 0deg;
+    --stage-tilt-y: 0deg;
+    position: relative;
+    min-height: 560px;
+    border-radius: 30px;
+    border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--glass-border));
+    background:
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08), transparent 58%),
+        linear-gradient(155deg, color-mix(in srgb, var(--bg-card) 78%, transparent), color-mix(in srgb, var(--bg-page) 88%, #09090c));
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--stage-tilt-y)) rotateY(var(--stage-tilt-x));
+    transition: transform 0.2s ease;
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.35);
+}
+
+.landing-stage-glow {
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 20px);
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--landing-glow), transparent 65%);
+    filter: blur(8px);
+    animation: landingPulse 3.2s ease-in-out infinite;
+}
+
+.landing-orbit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--primary) 48%, transparent);
+    transform-style: preserve-3d;
+}
+
+.landing-orbit-one {
+    width: 360px;
+    height: 360px;
+    transform: translate3d(-50%, -50%, 14px) rotateX(70deg);
+    animation: landingSpin 13s linear infinite;
+}
+
+.landing-orbit-two {
+    width: 250px;
+    height: 250px;
+    transform: translate3d(-50%, -50%, 12px) rotateY(66deg);
+    border-color: color-mix(in srgb, #60a5fa 54%, transparent);
+    animation: landingSpinReverse 9.5s linear infinite;
+}
+
+.landing-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 130px;
+    height: 130px;
+    border-radius: 28px;
+    transform: translate3d(-50%, -50%, 40px) rotateX(22deg) rotateY(-22deg);
+    background:
+        linear-gradient(135deg, var(--primary), #f973a9 44%, #60a5fa 100%);
+    box-shadow:
+        0 18px 38px rgba(255, 92, 157, 0.4),
+        inset 0 0 24px rgba(255, 255, 255, 0.24);
+    animation: landingCoreFloat 4s ease-in-out infinite;
+}
+
+.landing-float-card {
+    position: absolute;
+    padding: 0.72rem 0.8rem;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border-strong);
+    background: color-mix(in srgb, var(--bg-card) 80%, transparent);
+    box-shadow: 0 16px 24px rgba(0, 0, 0, 0.28);
+    transform-style: preserve-3d;
+}
+
+.landing-float-card span {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-soft);
+    margin-bottom: 0.22rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.landing-float-card strong {
+    font-size: 0.85rem;
+}
+
+.landing-float-card-one {
+    top: 14%;
+    left: 8%;
+    transform: translate3d(0, 0, 56px) rotateY(22deg);
+    animation: landingFloatA 6s ease-in-out infinite;
+}
+
+.landing-feature-stack {
+    position: absolute;
+    inset: auto 1rem 1rem;
+    display: grid;
+    gap: 0.56rem;
+    transform: translateZ(26px);
+}
+
+.landing-feature-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    padding: 0.6rem 0.72rem;
+    background: color-mix(in srgb, var(--bg-card-2) 76%, transparent);
+}
+
+.landing-feature-item p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-soft);
+}
+
+.landing-feature-item strong {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+@keyframes landingSpin {
+    from {
+        transform: translate3d(-50%, -50%, 14px) rotateX(70deg) rotateZ(0deg);
+    }
+    to {
+        transform: translate3d(-50%, -50%, 14px) rotateX(70deg) rotateZ(360deg);
+    }
+}
+
+@keyframes landingSpinReverse {
+    from {
+        transform: translate3d(-50%, -50%, 12px) rotateY(66deg) rotateZ(360deg);
+    }
+    to {
+        transform: translate3d(-50%, -50%, 12px) rotateY(66deg) rotateZ(0deg);
+    }
+}
+
+@keyframes landingCoreFloat {
+    0%,
+    100% {
+        transform: translate3d(-50%, -50%, 40px) rotateX(22deg) rotateY(-22deg);
+    }
+    50% {
+        transform: translate3d(-50%, -55%, 58px) rotateX(14deg) rotateY(-16deg);
+    }
+}
+
+@keyframes landingPulse {
+    0%,
+    100% {
+        opacity: 0.72;
+        transform: translate3d(-50%, -50%, 20px) scale(1);
+    }
+    50% {
+        opacity: 0.95;
+        transform: translate3d(-50%, -50%, 20px) scale(1.12);
+    }
+}
+
+@keyframes landingFloatA {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 56px) rotateY(22deg);
+    }
+    50% {
+        transform: translate3d(0, -10px, 68px) rotateY(16deg);
+    }
+}
+
+@media (max-width: 1080px) {
+    .landing-main {
+        grid-template-columns: 1fr;
+    }
+
+    .landing-copy h1 {
+        max-width: 20ch;
+    }
+
+    .landing-stage {
+        min-height: 480px;
+    }
+}
+
+@media (max-width: 720px) {
+    .landing-topbar {
+        padding-top: 0.9rem;
+    }
+
+    .landing-brand span {
+        font-size: 0.73rem;
+    }
+
+    .landing-options {
+        grid-template-columns: 1fr;
+    }
+
+    .landing-stage {
+        min-height: 420px;
+        border-radius: 24px;
+    }
+
+    .landing-feature-stack {
+        inset: auto 0.72rem 0.72rem;
+    }
+
+    .landing-float-card {
+        max-width: 46%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-stage,
+    .landing-orbit,
+    .landing-core,
+    .landing-stage-glow,
+    .landing-float-card,
+    .landing-option-card {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
+}

@@ -20,6 +20,7 @@ import DraftsPage from "./pages/DraftsPage";
 import SettingsPage from "./pages/SettingsPage";
 import GenericPlaceholder from "./pages/GenericPlaceholder";
 import Analytics from "./pages/AnalyticsReal";
+import LandingPage from "./pages/LandingPage";
 import FloatingPanel from "./components/FloatingPanel";
 
 // IMPORT: Clerk Auth helper components to handle route protection
@@ -59,7 +60,16 @@ function getInitialTheme() {
 
 function App() {
   const location = useLocation();
-  const hideSidebar = ["/discover", "/analytics", "/settings", "/drafts", "/bookmarks", "/trending", "/create"].includes(location.pathname);
+  const isLandingPage = location.pathname === "/";
+  const hideSidebar = [
+    "/discover",
+    "/analytics",
+    "/settings",
+    "/drafts",
+    "/bookmarks",
+    "/trending",
+    "/create",
+  ].includes(location.pathname);
 
   const [theme, setTheme] = React.useState(getInitialTheme);
 
@@ -82,6 +92,17 @@ function App() {
     }
   }, [theme]);
 
+  if (isLandingPage) {
+    return (
+      <div className="app">
+        <LandingPage
+          isDarkTheme={isDarkTheme}
+          onToggleTheme={toggleTheme}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <FloatingPanel />
@@ -94,7 +115,8 @@ function App() {
         <main className="feed-content">
           <Routes>
             {/* PUBLIC ROUTES: Accessible to everyone */}
-            <Route path="/" element={<Home />} />
+            <Route path="/feed" element={<Home />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/discover" element={<Discover />} />
             <Route path="/post/:id/:slug?" element={<PostDetail />} />
             <Route path="/trending" element={<TrendingPage />} />

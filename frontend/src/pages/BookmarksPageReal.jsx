@@ -151,7 +151,7 @@ function BookmarksPageReal() {
         <div className="bookmarks-empty">
           <h3>No bookmarks yet</h3>
           <p>Save stories from Home or Post pages and they will appear here.</p>
-          <Link to="/" className="bookmarks-browse-btn">Browse stories</Link>
+          <Link to="/feed" className="bookmarks-browse-btn">Browse stories</Link>
         </div>
       ) : (
         <div className="bookmarks-list">

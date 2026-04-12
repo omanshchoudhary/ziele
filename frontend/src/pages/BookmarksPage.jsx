@@ -119,7 +119,7 @@ function BookmarksPage() {
           <div className="bookmarks-empty-icon">🔖</div>
           <h3>No bookmarks yet</h3>
           <p>Stories you save will appear here for easy access.</p>
-          <Link to="/" className="bookmarks-browse-btn">Browse stories</Link>
+          <Link to="/feed" className="bookmarks-browse-btn">Browse stories</Link>
         </div>
       ) : (
         <div className="bookmarks-list">

@@ -61,7 +61,7 @@ function Profile() {
             {error || "The profile you’re looking for doesn’t exist."}
           </p>
           <div>
-            <Link to="/" className="back-btn">
+            <Link to="/feed" className="back-btn">
               ← Back to Home
             </Link>
           </div>

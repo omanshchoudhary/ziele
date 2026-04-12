@@ -251,7 +251,7 @@ function PostDetail() {
               "The post you are looking for doesn't exist or may have been removed."}
           </p>
           <div>
-            <Link to="/" className="back-btn">
+            <Link to="/feed" className="back-btn">
               ← Back to Home
             </Link>
           </div>
@@ -263,7 +263,7 @@ function PostDetail() {
   return (
     <div className="page post-detail-page">
       <div className="post-detail-back-row">
-        <Link to="/" className="back-btn post-detail-back-btn">
+        <Link to="/feed" className="back-btn post-detail-back-btn">
           ← Back to Home
         </Link>
       </div>
