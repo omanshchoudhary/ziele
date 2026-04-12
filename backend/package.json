@@ -7,6 +7,9 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "build": "prisma generate && node -e \"import('./src/app.js')\"",
+
+    "postinstall": "prisma generate",
+
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
