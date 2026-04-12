@@ -3,13 +3,21 @@ import app from "./src/app.js";
 import { env } from "./src/config/env.js";
 import { initSocketServer } from "./src/realtime/socketServer.js";
 
-const PORT = env.port;
+// Use process.env.PORT for cloud deployment compatibility
+const PORT = process.env.PORT || env.port || 3000;
+
+// Add a GET "/" route to return a simple message
+app.get("/", (req, res) => {
+  res.send("Backend is live ");
+});
+
+// Create the HTTP server
 const server = http.createServer(app);
 
-// Socket.io shares the same HTTP server so REST and realtime traffic
-// stay on a single port during local development and deployment.
+// Initialize Socket.io server
 initSocketServer(server);
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${server.address().port}`);
+// Listen on the specified port and bind to "0.0.0.0" for cloud compatibility
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
