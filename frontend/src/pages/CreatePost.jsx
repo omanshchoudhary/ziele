@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import {
   createPost,
+  updatePost,
+  getPostById,
   factCheckPostContent,
   getPosts,
   uploadPostMedia,
@@ -93,6 +95,9 @@ const quillModules = {
 };
 
 function CreatePost() {
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+
   const [form, setForm] = useState(INITIAL_STATE);
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState(DEFAULT_TAG_OPTIONS);
@@ -105,6 +110,7 @@ function CreatePost() {
   const [error, setError] = useState("");
   const [mediaMessage, setMediaMessage] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [isInitialLoading, setIsInitialLoading] = useState(!!editId);
   const fileInputRef = useRef(null);
 
   const customTags = useMemo(() => parseTags(form.tagsInput), [form.tagsInput]);
@@ -139,6 +145,39 @@ function CreatePost() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    setIsInitialLoading(true);
+    getPostById(editId)
+      .then((post) => {
+        if (cancelled) return;
+        if (post) {
+          setForm({
+            title: post.title || "",
+            content: post.content || "",
+            tagsInput: "",
+            mediaInput: post.mediaUrl || "",
+            mediaUrl: post.mediaUrl || "",
+            mediaType: post.mediaType || "",
+            mediaSource: post.mediaSource || "",
+            language: post.language || "English",
+            publishAsPremium: post.premium || false,
+          });
+          setSelectedTags(post.tags || []);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setError("Failed to load post for editing.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsInitialLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editId]);
 
   const onChange = (key) => (event) => {
     const value =
@@ -263,7 +302,7 @@ function CreatePost() {
             };
       }
 
-      const newPost = await createPost({
+      const payload = {
         title: form.title.trim(),
         content: form.content.trim(),
         tags,
@@ -272,7 +311,14 @@ function CreatePost() {
         mediaSource: mediaPayload?.mediaSource || "",
         language: form.language,
         premium: form.publishAsPremium,
-      });
+      };
+
+      let newPost;
+      if (editId) {
+        newPost = await updatePost(editId, payload);
+      } else {
+        newPost = await createPost(payload);
+      }
 
       setPublishedPost(newPost);
       setForm(INITIAL_STATE);
@@ -312,15 +358,16 @@ function CreatePost() {
     <div className="page create-post-page">
       <header className="create-post-header">
         <div className="create-post-header-copy">
-          <span className="create-post-eyebrow">Compose</span>
-          <h1 className="create-post-title">Create New Post</h1>
+          <span className="create-post-eyebrow">{editId ? "Edit" : "Compose"}</span>
+          <h1 className="create-post-title">{editId ? "Edit Post" : "Create New Post"}</h1>
           <p className="create-post-subtitle">
-            Write the story, style the description, attach media, and tag it so
-            it surfaces cleanly across the product.
+            {editId 
+              ? "Update your story, style the description, attach media, and refine tags."
+              : "Write the story, style the description, attach media, and tag it so it surfaces cleanly across the product."}
           </p>
         </div>
-        <Link to="/feed" className="back-btn">
-          Back to Home
+        <Link to={editId ? `/post/${editId}` : "/feed"} className="back-btn">
+          Back to {editId ? "Post" : "Home"}
         </Link>
       </header>
 
@@ -573,7 +620,7 @@ function CreatePost() {
         {error ? <p>{error}</p> : null}
 
         <button type="submit" disabled={isPublishing || isUploadingMedia}>
-          {isPublishing ? "Publishing..." : "Publish"}
+          {isPublishing ? (editId ? "Updating..." : "Publishing...") : (editId ? "Update Post" : "Publish")}
         </button>
       </form>
 
@@ -613,7 +660,12 @@ function CreatePost() {
 
       {publishedPost && (
         <section className="create-post-success">
-          Published: <strong>{publishedPost.title}</strong> ({publishedPost.readTime})
+          {editId ? "Updated" : "Published"}: <strong>{publishedPost.title}</strong> ({publishedPost.readTime})
+          <div style={{ marginTop: "1rem" }}>
+            <Link to={`/post/${publishedPost.id}`} className="create-post-secondary-btn">
+              View Post
+            </Link>
+          </div>
         </section>
       )}
     </div>

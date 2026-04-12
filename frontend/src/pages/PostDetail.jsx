@@ -272,7 +272,14 @@ function PostDetail() {
         <div className="post-header-top">
           <div className="post-author-avatar">{post.avatar}</div>
           <div className="post-author-info">
-            <span className="post-author-name">{post.authorName}</span>
+            <span className="post-author-name">
+              {post.authorName}
+              {post.premium && (
+                <span className="premium-check" title="Premium Post" style={{ marginLeft: "4px", color: "var(--accent-primary)", fontSize: "0.85em" }}>
+                  ✓
+                </span>
+              )}
+            </span>
             <span className="post-author-handle">{post.authorHandle}</span>
           </div>
           <FollowButton
@@ -282,7 +289,31 @@ function PostDetail() {
             isOwnProfile={post.isOwnAuthor}
             className="follow-btn post-follow-btn"
           />
-          <span className="post-time">{post.time}</span>
+          <div className="post-header-actions" style={{ marginLeft: "auto", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <span className="post-time">{post.time}</span>
+            {post.isOwnAuthor && (
+              <>
+                <Link to={`/create?edit=${post.id}`} className="post-action-btn" title="Edit post" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", textDecoration: "none" }}>
+                  <span className="sr-only">Edit</span>
+                  ✏️
+                </Link>
+                <button type="button" className="post-action-btn" title="Delete post" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={async () => {
+                  if (window.confirm("Are you sure you want to delete this post?")) {
+                    try {
+                      const { deletePost } = await import("../lib/apiClient");
+                      await deletePost(post.id);
+                      window.location.href = "/feed";
+                    } catch (err) {
+                      alert("Failed to delete post.");
+                    }
+                  }
+                }}>
+                  <span className="sr-only">Delete</span>
+                  🗑️
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="post-body-mid post-detail-body">

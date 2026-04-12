@@ -331,7 +331,14 @@ function Home() {
               <div className="post-author-avatar">{post.avatar}</div>
               <div className="post-author-info">
                 <div className="post-author-row">
-                  <span className="post-author-name">{post.authorName}</span>
+                  <span className="post-author-name">
+                    {post.authorName}
+                    {post.premium && (
+                      <span className="premium-check" title="Premium Post" style={{ marginLeft: "4px", color: "var(--accent-primary)", fontSize: "0.85em" }}>
+                        ✓
+                      </span>
+                    )}
+                  </span>
                   <FollowButton
                     profileId={post.profileId}
                     profileName={post.authorName}

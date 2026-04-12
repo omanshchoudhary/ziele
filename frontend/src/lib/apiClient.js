@@ -872,3 +872,24 @@ export const saveDraft = async (draft) => {
   localStorage.setItem("ziele_drafts", JSON.stringify(drafts));
   return drafts;
 };
+
+export const updatePost = withFallback(
+  (id, data) => fetchJson(`/api/posts/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  }),
+  async (id, data) => {
+    await delay();
+    return { id, ...data };
+  }
+);
+
+export const deletePost = withFallback(
+  (id) => fetchJson(`/api/posts/${id}`, {
+    method: "DELETE",
+  }),
+  async () => {
+    await delay();
+    return true;
+  }
+);
