@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getDrafts } from "../lib/apiClient";
 import "./DraftsPage.css";
 
 /* ── Mock drafts ──────────────────────────────────────────────── */
@@ -50,8 +51,23 @@ const statusConfig = {
 };
 
 function DraftsPage() {
-  const [drafts, setDrafts] = useState(initialDrafts);
+  const [drafts, setDrafts] = useState([]);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    getDrafts()
+      .then((data) => {
+        if (!cancelled) setDrafts(data.length > 0 ? data : initialDrafts);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredDrafts = filterStatus === "all"
     ? drafts
