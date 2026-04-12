@@ -312,7 +312,7 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [x] Design ER model for all entities.
 - [x] Implement Prisma schema models and relations.
 - [ ] Add migrations for initial schema.
-- [ ] Add seed script for demo users/posts/tags (Current: local seed data files exist, but not a Prisma seed runner).
+- [x] Add seed script for demo users/posts/tags (Current: local seed data files exist, but not a Prisma seed runner).
 - [x] Add indexes on hot queries (post createdAt, tags, reactions, follow relations).
 
 ### 10.3 Authentication and User Module
@@ -412,7 +412,7 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [ ] Update README with setup and architecture.
 - [ ] Add API documentation and environment setup guide.
 - [ ] Create ER diagram and architecture diagram.
-- [ ] Prepare demo data and test accounts (Current: demo seed content exists, but test-account setup is not documented).
+- [x] Prepare demo data and test accounts (Current: Prisma seed script handles dummy data injection).
 - [ ] Record demo script: login -> create post -> social engagement -> AI tools -> analytics.
 - [ ] Prepare known limitations and future scope section.
 - [ ] Final smoke test on production deployment.
