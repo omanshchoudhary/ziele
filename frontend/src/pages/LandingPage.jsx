@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { SignInButton, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import "./LandingPage.css";
 
 const STAGE_FEATURES = [
@@ -73,11 +73,12 @@ function LandingPage({ isDarkTheme = true, onToggleTheme = () => {} }) {
               </p>
 
               <SignedOut>
-                <SignInButton mode="modal" forceRedirectUrl="/feed">
-                  <button type="button" className="landing-option-btn primary">
-                    Continue with Sign In
-                  </button>
-                </SignInButton>
+                <Link
+                  to="/sign-in"
+                  className="landing-option-btn primary"
+                >
+                  Continue with Sign In
+                </Link>
               </SignedOut>
 
               <SignedIn>

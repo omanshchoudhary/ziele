@@ -1,32 +1,70 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-// IMPORT: Clerk SDK to wrap our application with authentication context
-import { ClerkProvider } from '@clerk/clerk-react';
-import App from './App';
-import ClerkTokenBridge from './components/ClerkTokenBridge';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, useNavigate } from "react-router-dom";
+import { ClerkProvider } from "@clerk/clerk-react";
+import App from "./App";
+import ClerkTokenBridge from "./components/ClerkTokenBridge";
+import "./index.css";
 
-// AUTH CONFIG: Retrieve the Clerk publishable key from Vite's environment variables.
-// You must add VITE_CLERK_PUBLISHABLE_KEY to your frontend/.env file.
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-if (!PUBLISHABLE_KEY) {
-  console.error("Missing Clerk Publishable Key in .env! Auth will fail.");
-  // We don't throw a hard hard error to let the UI render something, but Clerk needs a key.
-  // Using a dummy key here temporarily to prevent fatal crashes if env isn't populated yet.
+export function MissingClerkKeyScreen() {
+  return (
+    <div
+      style={{
+        fontFamily: "system-ui, sans-serif",
+        padding: "2rem",
+        maxWidth: "36rem",
+        margin: "0 auto",
+      }}
+    >
+      <h1 style={{ fontSize: "1.25rem" }}>Clerk configuration required</h1>
+      <p style={{ lineHeight: 1.6 }}>
+        Add{" "}
+        <code style={{ fontSize: "0.9em" }}>VITE_CLERK_PUBLISHABLE_KEY</code>{" "}
+        to <code style={{ fontSize: "0.9em" }}>frontend/.env</code> (see{" "}
+        <code style={{ fontSize: "0.9em" }}>.env.example</code>), then restart
+        the Vite dev server.
+      </p>
+    </div>
+  );
 }
 
-const safeKey = PUBLISHABLE_KEY || 'pk_test_ZHVtbXkta2V5LmNsZXJrLmFjY291bnRzLmRldiQ';
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    {/* PROVIDER: ClerkProvider injects auth state to all child components. */}
-    <ClerkProvider publishableKey={safeKey} afterSignOutUrl="/">
-      <ClerkTokenBridge />
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+export function ClerkProviderWithRouter({ children }) {
+  const navigate = useNavigate();
+  return (
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      routerPush={(to) => navigate(to)}
+      routerReplace={(to) => navigate(to, { replace: true })}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/feed"
+      signUpFallbackRedirectUrl="/feed"
+      afterSignOutUrl="/"
+    >
+      {children}
     </ClerkProvider>
-  </React.StrictMode>
-);
+  );
+}
+
+const root = document.getElementById("root");
+
+if (!PUBLISHABLE_KEY) {
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <MissingClerkKeyScreen />
+    </React.StrictMode>,
+  );
+} else {
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <ClerkProviderWithRouter>
+          <ClerkTokenBridge />
+          <App />
+        </ClerkProviderWithRouter>
+      </BrowserRouter>
+    </React.StrictMode>,
+  );
+}

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 // IMPORT: Clerk Auth UI components for seamless conditional rendering based on session state
-import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import "./Navbar.css";
 
 const SEARCHABLE_PATHS = ["/feed", "/discover", "/communities"];
@@ -281,13 +281,15 @@ function Navbar({ isDarkTheme = true, onToggleTheme = () => {} }) {
           </div>
         </SignedIn>
 
-        {/* CLERK: Show the native Sign In modal trigger when the user is logged out */}
         <SignedOut>
-          <SignInButton mode="modal">
-            <button className="nav-btn nav-btn-primary" style={{ cursor: "pointer" }}>
-              Sign In
-            </button>
-          </SignInButton>
+          <Link
+            to="/sign-in"
+            className="nav-btn nav-btn-primary"
+            title="Sign in"
+            aria-label="Sign in"
+          >
+            Sign In
+          </Link>
         </SignedOut>
       </div>
     </nav>

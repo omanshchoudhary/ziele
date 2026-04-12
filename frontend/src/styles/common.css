@@ -222,3 +222,12 @@ form button:disabled {
         width: 100%;
     }
 }
+
+.auth-clerk-shell {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    min-height: min(70vh, 720px);
+    padding: clamp(1rem, 3vw, 2rem) 0;
+}

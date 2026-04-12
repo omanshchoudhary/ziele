@@ -6,7 +6,9 @@ import "./styles/layout.css";
 import "./styles/common.css";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
-import Home from "./pages/Home";
+import Feed from "./pages/Feed";
+import SignInPage from "./pages/SignInPage";
+import SignUpPage from "./pages/SignUpPage";
 import Discover from "./pages/Discover";
 import PostDetail from "./pages/PostDetail";
 import CreatePost from "./pages/CreatePost";
@@ -95,6 +97,8 @@ function App() {
     "/bookmarks",
     "/trending",
     "/create",
+    "/sign-in",
+    "/sign-up",
   ].includes(location.pathname);
 
   const [theme, setTheme] = React.useState(getInitialTheme);
@@ -169,8 +173,10 @@ function App() {
         <main className="feed-content">
           <Routes>
             {/* PUBLIC ROUTES: Accessible to everyone */}
-            <Route path="/feed" element={<Home />} />
-            <Route path="/home" element={<Home />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/home" element={<Feed />} />
+            <Route path="/sign-in" element={<SignInPage />} />
+            <Route path="/sign-up" element={<SignUpPage />} />
             <Route path="/discover" element={<Discover />} />
             <Route path="/post/:id/:slug?" element={<PostDetail />} />
             <Route path="/trending" element={<TrendingPage />} />
