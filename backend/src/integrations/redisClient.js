@@ -55,6 +55,19 @@ function createUpstashRestClient() {
     ttl: async (key) =>
       toSafeNumber(await runUpstashCommand(["TTL", String(key)]), -1),
     ping: async () => String(await runUpstashCommand(["PING"])),
+    get: async (key) => {
+      const result = await runUpstashCommand(["GET", String(key)]);
+      return result === null ? null : String(result);
+    },
+    setEx: async (key, seconds, value) =>
+      String(
+        await runUpstashCommand([
+          "SETEX",
+          String(key),
+          String(Math.max(1, Number(seconds || 1))),
+          String(value ?? ""),
+        ]),
+      ),
     publish: async (channel, message) =>
       toSafeNumber(
         await runUpstashCommand([

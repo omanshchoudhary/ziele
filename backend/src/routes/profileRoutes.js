@@ -12,6 +12,8 @@ import {
   requireAuthWithContext,
   requireUserId,
 } from "../middleware/authMiddleware.js";
+import { validateBody } from "../middleware/validateRequest.js";
+import { profileUpdateSchema } from "../validation/contentSchemas.js";
 
 const router = express.Router();
 
@@ -31,6 +33,7 @@ router.put(
   "/current",
   requireAuthWithContext,
   requireUserId,
+  validateBody(profileUpdateSchema),
   updateCurrentProfile,
 );
 

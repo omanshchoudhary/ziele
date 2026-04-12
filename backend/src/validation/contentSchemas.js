@@ -65,3 +65,10 @@ export const aiFactCheckSchema = z.object({
   tags: z.array(z.string().trim().max(30)).max(8).optional(),
 });
 
+export const profileUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(64).optional(),
+  bio: z.string().trim().max(160).optional(),
+  avatar: z.string().trim().max(2048).optional(),
+  handle: z.string().trim().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Handle can only contain letters, numbers and underscores").optional(),
+});
+
