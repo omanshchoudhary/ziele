@@ -237,9 +237,13 @@ function FloatingPanel() {
   const onItemActivate = (item) => {
     if (item.action) {
       item.action();
+      setIsOpen(false);
       return;
     }
-    if (item.path) navigate(item.path);
+    if (item.path) {
+      navigate(item.path);
+      setIsOpen(false);
+    }
   };
 
   const onItemKeyDown = (event, item) => {
