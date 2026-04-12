@@ -37,10 +37,36 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const THEME_STORAGE_KEY = "ziele-theme";
+const FONT_SIZE_STORAGE_KEY = "ziele-font-size";
+const COMPACT_MODE_STORAGE_KEY = "ziele-compact-mode";
+const THEME_PREFERENCE_EVENT = "ziele:theme-preference-updated";
 const THEMES = {
   DARK: "dark",
   LIGHT: "light",
 };
+const FONT_SIZE_MAP = {
+  small: "15px",
+  medium: "16px",
+  large: "17px",
+};
+
+function applyStoredShellPreferences() {
+  try {
+    const storedFontSize = window.localStorage.getItem(FONT_SIZE_STORAGE_KEY);
+    const nextFontSize = FONT_SIZE_MAP[storedFontSize] || FONT_SIZE_MAP.medium;
+    document.documentElement.style.fontSize = nextFontSize;
+  } catch {
+    document.documentElement.style.fontSize = FONT_SIZE_MAP.medium;
+  }
+
+  try {
+    const compactModeEnabled =
+      window.localStorage.getItem(COMPACT_MODE_STORAGE_KEY) === "true";
+    document.body.classList.toggle("compact-mode", compactModeEnabled);
+  } catch {
+    document.body.classList.toggle("compact-mode", false);
+  }
+}
 
 function getInitialTheme() {
   try {
@@ -92,6 +118,34 @@ function App() {
     }
   }, [theme]);
 
+  React.useEffect(() => {
+    applyStoredShellPreferences();
+
+    const handleThemePreferenceUpdate = (event) => {
+      const nextTheme = event?.detail?.theme;
+
+      if (nextTheme === THEMES.DARK || nextTheme === THEMES.LIGHT) {
+        setTheme(nextTheme);
+      } else if (nextTheme === "system") {
+        const prefersDark = window.matchMedia?.(
+          "(prefers-color-scheme: dark)",
+        )?.matches;
+        setTheme(prefersDark ? THEMES.DARK : THEMES.LIGHT);
+      }
+
+      applyStoredShellPreferences();
+    };
+
+    window.addEventListener(THEME_PREFERENCE_EVENT, handleThemePreferenceUpdate);
+
+    return () => {
+      window.removeEventListener(
+        THEME_PREFERENCE_EVENT,
+        handleThemePreferenceUpdate,
+      );
+    };
+  }, []);
+
   if (isLandingPage) {
     return (
       <div className="app">
@@ -132,7 +186,7 @@ function App() {
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/bookmarks" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
             <Route path="/drafts" element={<DraftsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/more" element={<GenericPlaceholder />} />
           </Routes>
         </main>

@@ -841,7 +841,7 @@ export function connectNotificationsSocket({
 }
 
 export const updateCurrentProfile = withFallback(
-  (data) => fetchJson("/api/profile/current", {
+  (data) => fetchJson("/api/profiles/current", {
     method: "PUT",
     body: JSON.stringify(data),
   }),

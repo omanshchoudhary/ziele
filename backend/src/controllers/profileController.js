@@ -5,6 +5,7 @@ import {
   touchDailyStreak,
   unfollowProfileByIds,
 } from "../models/profileModel.js";
+import { prisma } from "../models/prismaClient.js";
 import { getProfileForClerkUser } from "../models/clerkSyncModel.js";
 import { notifyProfile } from "../services/notificationService.js";
 
@@ -14,6 +15,18 @@ async function resolveAuthProfile(req) {
   const profile = await getProfileForClerkUser(clerkUserId);
   req.resolvedProfile = profile || null;
   return profile;
+}
+
+function normalizeUsername(value = "") {
+  return String(value || "")
+    .trim()
+    .replace(/^@+/, "")
+    .toLowerCase();
+}
+
+function toHandle(username = "") {
+  const normalized = normalizeUsername(username);
+  return normalized ? `@${normalized}` : "";
 }
 
 export const getAllProfiles = async (req, res) => {
@@ -53,7 +66,24 @@ export const getCurrentProfile = async (req, res) => {
     }
 
     await touchDailyStreak(authProfile.id);
-    return res.json(await getProfileById(authProfile.id, authProfile.id));
+    const [profile, user] = await Promise.all([
+      getProfileById(authProfile.id, authProfile.id),
+      prisma.user.findUnique({
+        where: { clerkId: authProfile.clerkId },
+        select: {
+          email: true,
+          username: true,
+        },
+      }),
+    ]);
+
+    return res.json({
+      ...profile,
+      email: user?.email || null,
+      username:
+        user?.username ||
+        normalizeUsername(profile?.handle || authProfile.handle || ""),
+    });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch current profile" });
   }
@@ -121,30 +151,67 @@ export const updateCurrentProfile = async (req, res) => {
       return res.status(404).json({ error: "Profile not found" });
     }
 
-    const { name, bio, handle } = req.body;
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
+    const payload = req.validatedBody || req.body || {};
+    const nextName =
+      typeof payload.name === "string" ? payload.name.trim() : undefined;
+    const nextBio =
+      typeof payload.bio === "string" ? payload.bio.trim() : undefined;
+    const nextHandleValue =
+      typeof payload.handle === "string" ? payload.handle : undefined;
+    const nextHandle =
+      nextHandleValue !== undefined ? toHandle(nextHandleValue) : undefined;
 
     // Check if handle is taken by another user
-    if (handle && handle !== authProfile.handle) {
+    if (nextHandle && nextHandle !== authProfile.handle) {
       const existing = await prisma.profile.findFirst({
-        where: { handle }
+        where: {
+          handle: nextHandle,
+          id: { not: authProfile.id },
+        },
       });
       if (existing) {
         return res.status(400).json({ error: "Username already taken" });
       }
     }
 
-    const updated = await prisma.profile.update({
-      where: { id: authProfile.id },
-      data: {
-        name: name !== undefined ? name : authProfile.name,
-        bio: bio !== undefined ? bio : authProfile.bio,
-        handle: handle !== undefined ? handle : authProfile.handle,
+    await prisma.$transaction(async (tx) => {
+      await tx.profile.update({
+        where: { id: authProfile.id },
+        data: {
+          name: nextName !== undefined ? nextName : authProfile.name,
+          bio: nextBio !== undefined ? nextBio : authProfile.bio,
+          handle: nextHandle !== undefined ? nextHandle : authProfile.handle,
+        },
+      });
+
+      if (nextHandle !== undefined) {
+        await tx.user.update({
+          where: { clerkId: authProfile.clerkId },
+          data: {
+            username: normalizeUsername(nextHandle),
+          },
+        });
       }
     });
 
-    res.json(updated);
+    const [updatedProfile, updatedUser] = await Promise.all([
+      getProfileById(authProfile.id, authProfile.id),
+      prisma.user.findUnique({
+        where: { clerkId: authProfile.clerkId },
+        select: {
+          email: true,
+          username: true,
+        },
+      }),
+    ]);
+
+    res.json({
+      ...updatedProfile,
+      email: updatedUser?.email || null,
+      username:
+        updatedUser?.username ||
+        normalizeUsername(updatedProfile?.handle || authProfile.handle || ""),
+    });
   } catch (error) {
     console.error("Failed to update profile", error);
     res.status(500).json({ error: "Failed to update profile" });
