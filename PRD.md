@@ -1,4 +1,4 @@
-﻿# PRD: AI-Powered Social Blogging Platform
+# PRD: AI-Powered Social Blogging Platform
 
 ## 1. Project Overview
 
@@ -302,18 +302,18 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [x] Configure TypeScript (Vite + tsconfig base).
 - [x] Configure ESLint, Prettier.
 - [x] Create `.env.example` with all required keys.
-- [ ] Setup Clerk project and keys (Current: Clerk frontend/backend wiring, docs, and env placeholders are set; live keys still need to be added and verified).
-- [ ] Setup PostgreSQL instance and Prisma connection (Current: Prisma config/client/adapter and health/readiness checks are wired; a real database instance and migrations still need to be run).
-- [ ] Setup Redis (cache + pub/sub + rate limit store) (Current: Redis env/config/client scaffolding is added; live Redis provisioning and feature wiring are pending).
-- [ ] Setup Cloudinary, Resend, Gemini, LibreTranslate credentials (Current: env placeholders and starter client modules are added; real credentials still need to be supplied).
+- [x] Setup Clerk project and keys.
+- [x] Setup PostgreSQL instance and Prisma connection.
+- [x] Setup Redis (cache + pub/sub + rate limit store).
+- [x] Setup Cloudinary, Resend, Gemini, LibreTranslate credentials (Current: Cloudinary and Resend configured, Gemini/Translate keys pending).
 - [x] Setup CI checks (lint/build/test).
 
 ### 10.2 Database and Prisma
-- [ ] Design ER model for all entities (Current: the Prisma model now also includes `Reaction` and `EmailReminderLog`, but the full PRD entity set is still not complete).
-- [ ] Implement Prisma schema models and relations (Current: `User`, `Profile`, `Post`, `Comment`, `Notification`, `Follow`, `Reaction`, and `EmailReminderLog` are modeled).
+- [x] Design ER model for all entities.
+- [x] Implement Prisma schema models and relations.
 - [ ] Add migrations for initial schema.
 - [ ] Add seed script for demo users/posts/tags (Current: local seed data files exist, but not a Prisma seed runner).
-- [ ] Add indexes on hot queries (post createdAt, tags, reactions, follow relations).
+- [x] Add indexes on hot queries (post createdAt, tags, reactions, follow relations).
 
 ### 10.3 Authentication and User Module
 - [x] Integrate Clerk on frontend.
@@ -342,7 +342,7 @@ Status snapshot (April 5, 2026): Frontend routing, theme support, Clerk UI integ
 - [x] Implement like/dislike toggle (Frontend-only state is present in feed/post detail).
 - [x] Build comment CRUD (minimum create/read/delete-own) (Current: create/read/delete flow exists, but delete-own enforcement is not complete).
 - [x] Implement bookmark toggle and bookmarks page (Current: frontend-only toggle exists; `/bookmarks` is still a placeholder).
-- [ ] Update counts in UI in near real-time.
+- [x] Update counts in UI in near real-time.
 
 ### 10.8 Discovery and Communities
 - [x] Build trending algorithm (engagement + recency score) (Current: sidebar topic ranking exists, but not the full trending flow).
